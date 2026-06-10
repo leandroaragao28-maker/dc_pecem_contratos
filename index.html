@@ -176,11 +176,14 @@
     }
 
     function cartao(titulo, valor, base) {
-      const pct = base > 0 ? ` <span style="font-size:0.78rem;color:var(--cor-texto-m);font-weight:400;">(${((valor / base) * 100).toFixed(1)}%)</span>` : "";
+      const pct = base > 0
+        ? `<div class="card-metrica-sub">de ${fmtBRL(base)} &mdash; <span class="card-metrica-pct">${((valor / base) * 100).toFixed(1)}%</span></div>`
+        : "";
       return `
-        <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
-          <div class="card-titulo">${titulo}</div>
-          <div class="card-valor" style="font-size:1.15rem;">${fmtBRL(valor)}${pct}</div>
+        <div class="card-metrica">
+          <div class="card-metrica-titulo">${titulo}</div>
+          <div class="card-metrica-valor">${fmtBRL(valor)}</div>
+          ${pct}
         </div>`;
     }
 
