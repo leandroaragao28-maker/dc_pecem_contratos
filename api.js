@@ -12,12 +12,9 @@ async function api(acao, params = {}, corpo = null) {
   url.searchParams.set("token", getToken());
   url.searchParams.set("acao", acao);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  if (corpo) url.searchParams.set("corpo", JSON.stringify(corpo));
 
-  const opcoes = corpo
-    ? { method: "POST", body: JSON.stringify(corpo) }
-    : { method: "GET" };
-
-  const res  = await fetch(url.toString(), opcoes);
+  const res  = await fetch(url.toString());
   const data = await res.json();
 
   if (data.erro === "Token inválido") {
