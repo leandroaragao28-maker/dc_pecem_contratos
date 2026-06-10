@@ -158,6 +158,97 @@
     </div>
   </div>
 
+  <!-- Modal lançar fatura -->
+  <div class="modal-overlay" id="modal-fatura">
+    <div class="modal">
+      <div class="modal-titulo" id="modal-fatura-titulo">Lançar fatura</div>
+      <form id="form-fatura" onsubmit="salvarFatura(event)">
+        <input type="hidden" id="ff-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Medição vinculada</label>
+            <select id="ff-medicao" onchange="preencherValoresBM()">
+              <option value="">— Sem medição vinculada —</option>
+            </select>
+          </div>
+          <div class="form-grupo">
+            <label>Nº da Nota Fiscal</label>
+            <input type="text" id="ff-nf" required placeholder="Ex.: 000123">
+          </div>
+          <div class="form-grupo">
+            <label>Data de emissão</label>
+            <input type="date" id="ff-data" required>
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Valor bruto (R$)</label>
+            <input type="number" id="ff-bruto" min="0" step="0.01" required oninput="recalcularFatura()">
+          </div>
+          <div class="form-grupo">
+            <label>Retenção (R$)</label>
+            <input type="number" id="ff-retencao" min="0" step="0.01" value="0" oninput="recalcularFatura()">
+          </div>
+          <div class="form-grupo">
+            <label>Glosa (R$)</label>
+            <input type="number" id="ff-glosa" min="0" step="0.01" value="0" oninput="recalcularFatura()">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Desconto faturamento direto (R$)</label>
+            <input type="number" id="ff-direto" min="0" step="0.01" value="0" oninput="recalcularFatura()">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;background:var(--cor-fundo);border-radius:var(--raio);padding:12px;">
+            <div class="flex jc-between ai-center">
+              <span style="font-weight:600;font-size:0.9rem;">Valor líquido</span>
+              <span id="ff-liquido-display" style="font-size:1.1rem;font-weight:600;color:var(--cor-primaria);">R$ 0,00</span>
+            </div>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModalFatura()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar-fatura">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal devolução de retenção -->
+  <div class="modal-overlay" id="modal-devolucao">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-titulo" id="modal-devolucao-titulo">Lançar devolução de retenção</div>
+      <form id="form-devolucao" onsubmit="salvarDevolucao(event)">
+        <input type="hidden" id="fd-id">
+        <div class="form-grupo">
+          <label>Nº do documento</label>
+          <input type="text" id="fd-nf" required placeholder="NF ou nº do recibo">
+        </div>
+        <div class="form-grupo">
+          <label>Data</label>
+          <input type="date" id="fd-data" required>
+        </div>
+        <div class="form-grupo">
+          <label>Valor devolvido (R$)</label>
+          <input type="number" id="fd-valor" min="0" step="0.01" required>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModalDevolucao()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar-devolucao">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal confirmação exclusão faturamento -->
+  <div class="modal-overlay" id="modal-excluir-fat">
+    <div class="modal" style="max-width:380px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:12px;">⚠️</div>
+      <div class="modal-titulo">Excluir lançamento?</div>
+      <p class="txt-muted">Esta ação não pode ser desfeita.</p>
+      <div class="modal-acoes" style="justify-content:center;margin-top:20px;">
+        <button class="btn btn-secundario" onclick="fecharModalExcluirFat()">Cancelar</button>
+        <button class="btn btn-perigo" onclick="confirmarExclusaoFat()">Excluir</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Modal nova medição -->
   <div class="modal-overlay" id="modal-medicao">
     <div class="modal" style="max-width:420px;">
@@ -293,11 +384,36 @@
           <div id="lista-medicoes"><div class="estado-msg">Carregando…</div></div>
         </div>
 
-        <!-- Tab: Faturamento (Fase 4) -->
+        <!-- Tab: Faturamento -->
         <div class="tab-painel" id="tab-faturamento">
-          <div class="estado-msg" style="padding:32px;">
-            Módulo de faturamento disponível na Fase 4 do desenvolvimento.
+          <div id="cards-faturamento" style="display:none;">
+            <div class="grid-cartoes" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px;">
+              <div style="background:var(--cor-background-secondary,#f0f2f5);border-radius:var(--raio);padding:1rem;">
+                <div class="card-titulo">Faturado bruto</div>
+                <div class="card-valor" id="cf-bruto" style="font-size:1.1rem;">—</div>
+              </div>
+              <div style="background:var(--cor-background-secondary,#f0f2f5);border-radius:var(--raio);padding:1rem;">
+                <div class="card-titulo">Faturado líquido</div>
+                <div class="card-valor" id="cf-liquido" style="font-size:1.1rem;">—</div>
+              </div>
+              <div style="background:var(--cor-background-secondary,#f0f2f5);border-radius:var(--raio);padding:1rem;">
+                <div class="card-titulo">Total retido</div>
+                <div class="card-valor" id="cf-retido" style="font-size:1.1rem;">—</div>
+              </div>
+              <div style="background:var(--cor-background-secondary,#f0f2f5);border-radius:var(--raio);padding:1rem;">
+                <div class="card-titulo">Saldo retido a receber</div>
+                <div class="card-valor" id="cf-saldo-retido" style="font-size:1.1rem;">—</div>
+              </div>
+            </div>
           </div>
+          <div class="flex jc-between ai-center mb-16">
+            <span class="txt-muted" id="resumo-faturamento"></span>
+            <div class="flex gap-8">
+              <button class="btn btn-secundario btn-sm" onclick="abrirModalDevolucao()">+ Devolução de retenção</button>
+              <button class="btn btn-primario btn-sm" onclick="abrirModalFatura()">+ Lançar fatura</button>
+            </div>
+          </div>
+          <div id="lista-faturamento"><div class="estado-msg">Carregando…</div></div>
         </div>
       `;
     }
@@ -513,6 +629,15 @@
     document.getElementById("modal-medicao").addEventListener("click", function(e) {
       if (e.target === this) fecharModalMedicao();
     });
+    document.getElementById("modal-fatura").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalFatura();
+    });
+    document.getElementById("modal-devolucao").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalDevolucao();
+    });
+    document.getElementById("modal-excluir-fat").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalExcluirFat();
+    });
 
     // ── Medições ───────────────────────────────────────────
     const BADGES_BM = {
@@ -576,11 +701,12 @@
         </div>`;
     }
 
-    // Carrega medições quando a aba é aberta
+    // Carrega dados ao trocar de aba
     const tabBtnOriginal = window.trocarTab;
     window.trocarTab = function(id, btn) {
       tabBtnOriginal(id, btn);
-      if (id === "medicoes" && !medicoesList.length) carregarMedicoes();
+      if (id === "medicoes"    && !medicoesList.length)     carregarMedicoes();
+      if (id === "faturamento")                             carregarFaturamento();
     };
 
     function proximoNumBm() {
@@ -617,6 +743,274 @@
     function fecharModalMedicao() {
       document.getElementById("modal-medicao").classList.remove("aberto");
     }
+
+    // ── Faturamento ────────────────────────────────────────
+    let faturamentoList = [];
+    let idExcluirFat    = null;
+
+    async function carregarFaturamento() {
+      document.getElementById("lista-faturamento").innerHTML = `<div class="estado-msg">Carregando…</div>`;
+      try {
+        // Garante que medições estejam carregadas para o dropdown
+        if (!medicoesList.length) await carregarMedicoes();
+        const res = await API.faturamento(pedidoId);
+        faturamentoList = res.dados || [];
+        renderFaturamento();
+      } catch (e) {
+        document.getElementById("lista-faturamento").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro: ${e.message}</div>`;
+      }
+    }
+
+    function renderFaturamento() {
+      const faturas    = faturamentoList.filter(f => f.tipo === "fatura");
+      const devolucoes = faturamentoList.filter(f => f.tipo === "devolucao_retencao");
+
+      const totBruto   = faturas.reduce((s, f) => s + num(f.valor_bruto),          0);
+      const totLiquido = faturas.reduce((s, f) => s + num(f.valor_liquido),         0);
+      const totRetido  = faturas.reduce((s, f) => s + num(f.retencao),              0);
+      const totDevol   = devolucoes.reduce((s, f) => s + num(f.valor_bruto),        0);
+      const saldoRetido = totRetido - totDevol;
+
+      // Cartões
+      const cards = document.getElementById("cards-faturamento");
+      cards.style.display = "";
+      document.getElementById("cf-bruto").textContent        = fmtBRL(totBruto);
+      document.getElementById("cf-liquido").textContent      = fmtBRL(totLiquido);
+      document.getElementById("cf-retido").textContent       = fmtBRL(totRetido);
+      document.getElementById("cf-saldo-retido").textContent = fmtBRL(saldoRetido);
+
+      // Resumo
+      document.getElementById("resumo-faturamento").innerHTML =
+        `${faturas.length} fatura(s) · ${devolucoes.length} devolução(ões)`;
+
+      const el = document.getElementById("lista-faturamento");
+
+      if (!faturamentoList.length) {
+        el.innerHTML = `<div class="estado-msg">Nenhum lançamento. Use os botões acima para registrar faturas ou devoluções de retenção.</div>`;
+        return;
+      }
+
+      const nomeBM = id => {
+        const m = medicoesList.find(x => String(x.id) === String(id));
+        return m ? `${m.num_bm} (${m.periodo})` : "—";
+      };
+
+      const linhasFatura = faturas.map(f => `
+        <tr>
+          <td>${esc(f.num_nf) || "—"}</td>
+          <td class="txt-muted">${fmtData(f.data)}</td>
+          <td class="txt-muted">${nomeBM(f.medicao_id)}</td>
+          <td class="num">${fmtBRL(f.valor_bruto)}</td>
+          <td class="num" style="color:#dc2626;">${fmtBRL(f.retencao)}</td>
+          <td class="num" style="color:#dc2626;">${fmtBRL(f.glosa)}</td>
+          <td class="num" style="color:#dc2626;">${fmtBRL(f.desconto_fat_direto)}</td>
+          <td class="num" style="font-weight:600;">${fmtBRL(f.valor_liquido)}</td>
+          <td class="txt-direita">
+            <button class="btn btn-secundario btn-sm" onclick="editarFatura(${f.id})" title="Editar">✏️</button>
+            <button class="btn btn-secundario btn-sm" onclick="pedirExclusaoFat(${f.id})" title="Excluir" style="margin-left:4px;">🗑️</button>
+          </td>
+        </tr>`).join("");
+
+      const linhasDevol = devolucoes.map(f => `
+        <tr>
+          <td colspan="2">${esc(f.num_nf) || "—"}</td>
+          <td class="txt-muted">${fmtData(f.data)}</td>
+          <td class="num" colspan="4" style="color:var(--cor-primaria);font-weight:600;">Devolução: ${fmtBRL(f.valor_bruto)}</td>
+          <td></td>
+          <td class="txt-direita">
+            <button class="btn btn-secundario btn-sm" onclick="pedirExclusaoFat(${f.id})" title="Excluir">🗑️</button>
+          </td>
+        </tr>`).join("");
+
+      el.innerHTML = `
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nº NF</th>
+                <th style="width:90px;">Data</th>
+                <th style="width:150px;">BM</th>
+                <th class="num" style="width:110px;">Valor bruto</th>
+                <th class="num" style="width:100px;">Retenção</th>
+                <th class="num" style="width:80px;">Glosa</th>
+                <th class="num" style="width:110px;">Fat. direto</th>
+                <th class="num" style="width:110px;">Valor líquido</th>
+                <th style="width:80px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${linhasFatura}
+              ${linhasDevol}
+            </tbody>
+            ${faturas.length ? `
+            <tfoot>
+              <tr>
+                <td colspan="3" style="text-align:right;font-weight:600;">Totais</td>
+                <td class="num" style="font-weight:600;">${fmtBRL(totBruto)}</td>
+                <td class="num" style="color:#dc2626;font-weight:600;">${fmtBRL(totRetido)}</td>
+                <td></td><td></td>
+                <td class="num" style="font-weight:600;">${fmtBRL(totLiquido)}</td>
+                <td></td>
+              </tr>
+            </tfoot>` : ""}
+          </table>
+        </div>`;
+    }
+
+    // ── Modal fatura ───────────────────────────────────────
+    function popularDropdownBM(selecionado) {
+      const sel = document.getElementById("ff-medicao");
+      sel.innerHTML = `<option value="">— Sem medição vinculada —</option>` +
+        medicoesList.map(m =>
+          `<option value="${m.id}" ${String(m.id) === String(selecionado) ? "selected" : ""}>
+            ${esc(m.num_bm)} — ${esc(m.periodo)}
+          </option>`
+        ).join("");
+    }
+
+    function abrirModalFatura() {
+      document.getElementById("modal-fatura-titulo").textContent = "Lançar fatura";
+      document.getElementById("ff-id").value       = "";
+      document.getElementById("ff-nf").value       = "";
+      document.getElementById("ff-data").value     = new Date().toISOString().slice(0, 10);
+      document.getElementById("ff-bruto").value    = "";
+      document.getElementById("ff-retencao").value = "0";
+      document.getElementById("ff-glosa").value    = "0";
+      document.getElementById("ff-direto").value   = "0";
+      popularDropdownBM("");
+      recalcularFatura();
+      document.getElementById("modal-fatura").classList.add("aberto");
+    }
+
+    function editarFatura(id) {
+      const f = faturamentoList.find(x => String(x.id) === String(id));
+      if (!f) return;
+      document.getElementById("modal-fatura-titulo").textContent = "Editar fatura";
+      document.getElementById("ff-id").value       = f.id;
+      document.getElementById("ff-nf").value       = f.num_nf || "";
+      document.getElementById("ff-data").value     = isoData(f.data);
+      document.getElementById("ff-bruto").value    = f.valor_bruto || 0;
+      document.getElementById("ff-retencao").value = f.retencao || 0;
+      document.getElementById("ff-glosa").value    = f.glosa || 0;
+      document.getElementById("ff-direto").value   = f.desconto_fat_direto || 0;
+      popularDropdownBM(f.medicao_id);
+      recalcularFatura();
+      document.getElementById("modal-fatura").classList.add("aberto");
+    }
+
+    function fecharModalFatura() {
+      document.getElementById("modal-fatura").classList.remove("aberto");
+    }
+
+    function preencherValoresBM() {
+      const id = document.getElementById("ff-medicao").value;
+      if (!id) return;
+      const m = medicoesList.find(x => String(x.id) === String(id));
+      if (!m || !m.totalMedido) return;
+      document.getElementById("ff-bruto").value = Number(m.totalMedido).toFixed(2);
+      const retPct = Number(pedidoAtual.perc_retencao) || 0;
+      document.getElementById("ff-retencao").value = (Number(m.totalMedido) * retPct / 100).toFixed(2);
+      recalcularFatura();
+    }
+
+    function recalcularFatura() {
+      const bruto   = parseFloat(document.getElementById("ff-bruto").value)    || 0;
+      const retencao= parseFloat(document.getElementById("ff-retencao").value) || 0;
+      const glosa   = parseFloat(document.getElementById("ff-glosa").value)    || 0;
+      const direto  = parseFloat(document.getElementById("ff-direto").value)   || 0;
+      const liquido = bruto - retencao - glosa - direto;
+      document.getElementById("ff-liquido-display").textContent = fmtBRL(liquido);
+    }
+
+    async function salvarFatura(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar-fatura");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        const dados = {
+          id:                  document.getElementById("ff-id").value || null,
+          tipo:                "fatura",
+          pedido_id:           pedidoId,
+          medicao_id:          document.getElementById("ff-medicao").value || "",
+          num_nf:              document.getElementById("ff-nf").value,
+          data:                document.getElementById("ff-data").value,
+          valor_bruto:         parseFloat(document.getElementById("ff-bruto").value)    || 0,
+          retencao:            parseFloat(document.getElementById("ff-retencao").value) || 0,
+          glosa:               parseFloat(document.getElementById("ff-glosa").value)    || 0,
+          desconto_fat_direto: parseFloat(document.getElementById("ff-direto").value)   || 0,
+        };
+        await API.salvarFaturamento(dados);
+        fecharModalFatura();
+        await carregarFaturamento();
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Salvar";
+      }
+    }
+
+    // ── Modal devolução ────────────────────────────────────
+    function abrirModalDevolucao(id) {
+      const f = id ? faturamentoList.find(x => String(x.id) === String(id)) : null;
+      document.getElementById("modal-devolucao-titulo").textContent = f ? "Editar devolução" : "Lançar devolução de retenção";
+      document.getElementById("fd-id").value    = f ? f.id : "";
+      document.getElementById("fd-nf").value    = f ? (f.num_nf || "") : "";
+      document.getElementById("fd-data").value  = f ? isoData(f.data) : new Date().toISOString().slice(0, 10);
+      document.getElementById("fd-valor").value = f ? (f.valor_bruto || "") : "";
+      document.getElementById("modal-devolucao").classList.add("aberto");
+    }
+
+    function fecharModalDevolucao() {
+      document.getElementById("modal-devolucao").classList.remove("aberto");
+    }
+
+    async function salvarDevolucao(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar-devolucao");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        const dados = {
+          id:          document.getElementById("fd-id").value || null,
+          tipo:        "devolucao_retencao",
+          pedido_id:   pedidoId,
+          medicao_id:  "",
+          num_nf:      document.getElementById("fd-nf").value,
+          data:        document.getElementById("fd-data").value,
+          valor_bruto: parseFloat(document.getElementById("fd-valor").value) || 0,
+          retencao:    0, glosa: 0, desconto_fat_direto: 0,
+        };
+        await API.salvarFaturamento(dados);
+        fecharModalDevolucao();
+        await carregarFaturamento();
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Salvar";
+      }
+    }
+
+    // ── Exclusão de faturamento ────────────────────────────
+    function pedirExclusaoFat(id) {
+      idExcluirFat = id;
+      document.getElementById("modal-excluir-fat").classList.add("aberto");
+    }
+    function fecharModalExcluirFat() {
+      idExcluirFat = null;
+      document.getElementById("modal-excluir-fat").classList.remove("aberto");
+    }
+    async function confirmarExclusaoFat() {
+      if (!idExcluirFat) return;
+      try {
+        await API.excluirFaturamento(idExcluirFat);
+        fecharModalExcluirFat();
+        await carregarFaturamento();
+      } catch (err) {
+        alert("Erro ao excluir: " + err.message);
+      }
+    }
+
+    function num(v) { return parseFloat(v) || 0; }
 
     async function salvarMedicao(e) {
       e.preventDefault();
