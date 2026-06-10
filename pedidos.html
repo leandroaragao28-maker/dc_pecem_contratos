@@ -9,7 +9,7 @@
     /* Alinhamento R$ em colunas monetárias */
     .val-brl { display: flex; justify-content: flex-end; align-items: baseline; gap: 3px; }
     .val-brl .s { color: var(--cor-texto-m); font-size: 0.73rem; flex-shrink: 0; }
-    .val-brl .n { font-variant-numeric: tabular-nums; min-width: 88px; text-align: right; }
+    .val-brl .n { font-family: 'Consolas', 'SF Mono', 'Menlo', 'Courier New', monospace; font-size: 0.79rem; min-width: 14ch; text-align: right; }
 
     /* Legenda de status */
     .legenda-status { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 0.75rem; color: var(--cor-texto-m); }
@@ -26,7 +26,7 @@
 
   <header>
     <div>
-      <div style="font-size:0.78rem;opacity:0.75;margin-bottom:2px;">DC Pecém — Contratos</div>
+      <div style="font-size:0.78rem;opacity:0.75;margin-bottom:2px;">🏗️ DC Pecém — Contratos</div>
       <h1>Pedidos</h1>
     </div>
     <button class="btn btn-primario" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);" onclick="abrirModalNovo()">
