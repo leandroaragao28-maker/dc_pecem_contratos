@@ -7,17 +7,24 @@
   <link rel="stylesheet" href="style.css">
   <style>
     /* Alinhamento R$ em colunas monetárias */
-    .val-brl { display: flex; justify-content: flex-end; align-items: baseline; gap: 3px; }
-    .val-brl .s { color: var(--cor-texto-m); font-size: 0.73rem; flex-shrink: 0; }
-    .val-brl .n { font-family: 'Consolas', 'SF Mono', 'Menlo', 'Courier New', monospace; font-size: 0.79rem; min-width: 14ch; text-align: right; }
+    .val-brl { display: flex; justify-content: flex-end; align-items: baseline; gap: 2px; }
+    .val-brl .s { color: var(--cor-texto-m); font-size: 0.67rem; flex-shrink: 0; }
+    .val-brl .n { font-family: 'Courier New', monospace; font-size: 0.72rem; min-width: 14ch; text-align: right; letter-spacing: -0.3px; }
 
     /* Legenda de status */
     .legenda-status { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 0.75rem; color: var(--cor-texto-m); }
     .legenda-status span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
     .legenda-status .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
 
-    /* Nº PED com fonte mono para melhor alinhamento */
-    .num-ped { font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
+    /* Nº PED */
+    .num-ped { font-variant-numeric: tabular-nums; letter-spacing: 0.5px; font-size: 0.74rem; }
+
+    /* Truncar descrição longa com reticências */
+    td.col-descricao { max-width: 0; }
+    td.col-descricao a { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.80rem; }
+
+    /* ID menor */
+    td.col-id { font-size: 0.74rem; }
 
     @media (max-width: 900px) { .col-exec, .col-med, .col-fat { display: none; } }
   </style>
@@ -220,12 +227,10 @@
 
       document.getElementById("corpo-tabela").innerHTML = lista.map(p => `
         <tr>
-          <td><strong>#${p.id}</strong></td>
+          <td class="col-id"><strong>#${p.id}</strong></td>
           <td class="txt-muted num-ped">${fmtNumPed(p.num_pedido_sap)}</td>
-          <td>
-            <a href="pedido.html?id=${p.id}" style="color:var(--cor-primaria);text-decoration:none;font-weight:500;">
-              ${esc(p.descricao)}
-            </a>
+          <td class="col-descricao">
+            <a href="pedido.html?id=${p.id}" title="${esc(p.descricao)}" style="color:var(--cor-primaria);text-decoration:none;font-weight:500;">${esc(p.descricao)}</a>
           </td>
           <td>${brl(p.valor)}</td>
           <td class="col-exec">${brl(p.executado)}</td>
