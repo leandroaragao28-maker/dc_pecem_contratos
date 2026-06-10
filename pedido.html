@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Detalhe do Pedido — DC Pecém</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .secao-titulo {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: var(--cor-texto-m);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px;
+    }
+    .info-item label { font-size: 0.8rem; color: var(--cor-texto-m); display: block; margin-bottom: 2px; }
+    .info-item span  { font-size: 0.95rem; font-weight: 500; }
+    .tab-nav { display: flex; gap: 4px; border-bottom: 2px solid var(--cor-borda); margin-bottom: 20px; }
+    .tab-btn {
+      padding: 8px 16px;
+      font-size: 0.88rem;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--cor-texto-m);
+      border-bottom: 2px solid transparent;
+      margin-bottom: -2px;
+      font-family: inherit;
+    }
+    .tab-btn.ativo { color: var(--cor-primaria); border-bottom-color: var(--cor-primaria); font-weight: 600; }
+    .tab-painel { display: none; }
+    .tab-painel.ativo { display: block; }
+  </style>
+</head>
+<body class="pagina">
+
+  <header>
+    <div>
+      <div style="font-size:0.78rem;opacity:0.75;margin-bottom:2px;">
+        <a href="pedidos.html" style="color:inherit;text-decoration:none;">← Pedidos</a>
+      </div>
+      <h1 id="titulo-header">Pedido</h1>
+    </div>
+    <div class="flex gap-8">
+      <button class="btn btn-primario" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);" onclick="abrirModalEditarPedido()">
+        Editar pedido
+      </button>
+    </div>
+  </header>
+
+  <nav>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="#" onclick="sair(event)">Sair</a>
+  </nav>
+
+  <main>
+    <div id="conteudo">
+      <div class="estado-msg">Carregando…</div>
+    </div>
+  </main>
+
+  <!-- Modal editar pedido -->
+  <div class="modal-overlay" id="modal-pedido">
+    <div class="modal">
+      <div class="modal-titulo">Editar pedido</div>
+      <form id="form-pedido" onsubmit="salvarPedido(event)">
+        <input type="hidden" id="f-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Descrição</label>
+            <input type="text" id="f-descricao" required>
+          </div>
+          <div class="form-grupo">
+            <label>Nº pedido SAP</label>
+            <input type="text" id="f-num-sap">
+          </div>
+          <div class="form-grupo">
+            <label>Valor contratado (R$)</label>
+            <input type="number" id="f-valor" min="0" step="0.01">
+          </div>
+          <div class="form-grupo">
+            <label>% Retenção</label>
+            <input type="number" id="f-retencao" min="0" max="100" step="0.01">
+          </div>
+          <div class="form-grupo">
+            <label>Status</label>
+            <select id="f-status">
+              <option value="em negociação">Em negociação</option>
+              <option value="aguardando pedido">Aguardando pedido</option>
+              <option value="pedido emitido">Pedido emitido</option>
+              <option value="concluído">Concluído</option>
+            </select>
+          </div>
+          <div class="form-grupo">
+            <label>Data de emissão</label>
+            <input type="date" id="f-data-emissao">
+          </div>
+          <div class="form-grupo">
+            <label>Data de início</label>
+            <input type="date" id="f-data-inicio">
+          </div>
+          <div class="form-grupo">
+            <label>Término previsto</label>
+            <input type="date" id="f-termino">
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModalPedido()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar-pedido">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal item -->
+  <div class="modal-overlay" id="modal-item">
+    <div class="modal">
+      <div class="modal-titulo" id="modal-item-titulo">Novo item</div>
+      <form id="form-item" onsubmit="salvarItem(event)">
+        <input type="hidden" id="fi-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-grupo">
+            <label>Nº item</label>
+            <input type="text" id="fi-num" required placeholder="Ex.: 01">
+          </div>
+          <div class="form-grupo">
+            <label>Unidade</label>
+            <input type="text" id="fi-unidade" required placeholder="un, m², vb…">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Descrição</label>
+            <input type="text" id="fi-descricao" required>
+          </div>
+          <div class="form-grupo">
+            <label>Qtd. contratada</label>
+            <input type="number" id="fi-qtd" min="0" step="0.001" required>
+          </div>
+          <div class="form-grupo">
+            <label>Preço unitário (R$)</label>
+            <input type="number" id="fi-preco" min="0" step="0.01" required>
+          </div>
+          <div class="form-grupo">
+            <label>% Executado</label>
+            <input type="number" id="fi-exec" min="0" max="100" step="0.1" value="0">
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModalItem()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar-item">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal confirmação exclusão item -->
+  <div class="modal-overlay" id="modal-excluir-item">
+    <div class="modal" style="max-width:380px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:12px;">⚠️</div>
+      <div class="modal-titulo">Excluir item?</div>
+      <p class="txt-muted">Esta ação não pode ser desfeita.</p>
+      <div class="modal-acoes" style="justify-content:center;margin-top:20px;">
+        <button class="btn btn-secundario" onclick="fecharModalExcluirItem()">Cancelar</button>
+        <button class="btn btn-perigo" onclick="confirmarExclusaoItem()">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script>
+    if (!estaAutenticado()) location.href = "login.html";
+
+    const params  = new URLSearchParams(location.search);
+    const pedidoId = params.get("id");
+    if (!pedidoId) location.href = "pedidos.html";
+
+    let pedidoAtual = null;
+    let itensAtuais = [];
+    let idExcluirItem = null;
+
+    const BADGES = {
+      "em negociação":    "badge badge-neg",
+      "aguardando pedido":"badge badge-ag",
+      "pedido emitido":   "badge badge-em",
+      "concluído":        "badge badge-ok",
+    };
+
+    // ── Carregamento ───────────────────────────────────────
+    carregarPedido();
+
+    async function carregarPedido() {
+      try {
+        const res = await API.pedido(pedidoId);
+        pedidoAtual  = res.pedido;
+        itensAtuais  = res.itens || [];
+        renderPagina();
+      } catch (e) {
+        document.getElementById("conteudo").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro ao carregar: ${e.message}</div>`;
+      }
+    }
+
+    // ── Render ─────────────────────────────────────────────
+    function renderPagina() {
+      const p = pedidoAtual;
+      document.title = `#${p.id} ${p.descricao} — DC Pecém`;
+      document.getElementById("titulo-header").textContent = `#${p.id} — ${p.descricao}`;
+
+      const totalContratado = itensAtuais.reduce((s, i) =>
+        s + (Number(i.qtd_contratada) * Number(i.preco_unitario)), 0);
+      const totalExecutado  = itensAtuais.reduce((s, i) =>
+        s + (Number(i.qtd_contratada) * Number(i.preco_unitario) * (Number(i.perc_executado) / 100)), 0);
+
+      document.getElementById("conteudo").innerHTML = `
+        <!-- Dados do pedido -->
+        <div class="card mb-24">
+          <div class="info-grid">
+            <div class="info-item"><label>Nº SAP</label><span>${esc(p.num_pedido_sap) || "—"}</span></div>
+            <div class="info-item"><label>Status</label><span class="${BADGES[p.status] || 'badge'}">${p.status || "—"}</span></div>
+            <div class="info-item"><label>Valor contratado</label><span>${fmtBRL(p.valor)}</span></div>
+            <div class="info-item"><label>% Retenção</label><span>${p.perc_retencao ? p.perc_retencao + "%" : "—"}</span></div>
+            <div class="info-item"><label>Data de emissão</label><span>${fmtData(p.data_emissao)}</span></div>
+            <div class="info-item"><label>Início</label><span>${fmtData(p.data_inicio)}</span></div>
+            <div class="info-item"><label>Término previsto</label><span>${fmtData(p.termino_previsto)}</span></div>
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="tab-nav">
+          <button class="tab-btn ativo" onclick="trocarTab('itens', this)">Itens do contrato</button>
+          <button class="tab-btn" onclick="trocarTab('medicoes', this)">Medições</button>
+          <button class="tab-btn" onclick="trocarTab('faturamento', this)">Faturamento</button>
+        </div>
+
+        <!-- Tab: Itens -->
+        <div class="tab-painel ativo" id="tab-itens">
+          <div class="flex jc-between ai-center mb-16">
+            <div>
+              <span class="txt-muted">Total contratado: <strong>${fmtBRL(totalContratado)}</strong></span>
+              <span class="txt-muted" style="margin-left:16px;">Executado: <strong>${fmtBRL(totalExecutado)}</strong>
+                (${totalContratado > 0 ? ((totalExecutado / totalContratado) * 100).toFixed(1) : 0}%)
+              </span>
+            </div>
+            <button class="btn btn-primario btn-sm" onclick="abrirModalNovoItem()">+ Novo item</button>
+          </div>
+          ${renderItens()}
+        </div>
+
+        <!-- Tab: Medições (Fase 3) -->
+        <div class="tab-painel" id="tab-medicoes">
+          <div class="estado-msg" style="padding:32px;">
+            Módulo de medições disponível na Fase 3 do desenvolvimento.
+          </div>
+        </div>
+
+        <!-- Tab: Faturamento (Fase 4) -->
+        <div class="tab-painel" id="tab-faturamento">
+          <div class="estado-msg" style="padding:32px;">
+            Módulo de faturamento disponível na Fase 4 do desenvolvimento.
+          </div>
+        </div>
+      `;
+    }
+
+    function renderItens() {
+      if (!itensAtuais.length) return `<div class="estado-msg">Nenhum item cadastrado. Clique em "+ Novo item" para começar.</div>`;
+
+      const linhas = itensAtuais.map(i => {
+        const total = Number(i.qtd_contratada) * Number(i.preco_unitario);
+        const exec  = Number(i.perc_executado) || 0;
+        return `
+          <tr>
+            <td><strong>${esc(i.num_item)}</strong></td>
+            <td>${esc(i.descricao)}</td>
+            <td class="txt-muted">${esc(i.unidade)}</td>
+            <td class="num">${fmtNum(i.qtd_contratada)}</td>
+            <td class="num">${fmtBRL(i.preco_unitario)}</td>
+            <td class="num">${fmtBRL(total)}</td>
+            <td>
+              <div class="flex ai-center gap-8">
+                <div class="barra-wrap" style="flex:1;min-width:60px;"><div class="barra" style="width:${exec}%"></div></div>
+                <span class="txt-muted" style="min-width:36px;font-size:0.82rem;">${exec}%</span>
+              </div>
+            </td>
+            <td class="txt-direita">
+              <button class="btn btn-secundario btn-sm" onclick="abrirModalEditarItem(${i.id})" title="Editar">✏️</button>
+              <button class="btn btn-secundario btn-sm" onclick="pedirExclusaoItem(${i.id})" title="Excluir" style="margin-left:4px;">🗑️</button>
+            </td>
+          </tr>`;
+      }).join("");
+
+      return `
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:60px;">Item</th>
+                <th>Descrição</th>
+                <th style="width:60px;">Und.</th>
+                <th class="num" style="width:100px;">Qtd.</th>
+                <th class="num" style="width:110px;">Preço unit.</th>
+                <th class="num" style="width:120px;">Total</th>
+                <th style="width:140px;">% Executado</th>
+                <th style="width:80px;"></th>
+              </tr>
+            </thead>
+            <tbody>${linhas}</tbody>
+          </table>
+        </div>`;
+    }
+
+    function trocarTab(id, btn) {
+      document.querySelectorAll(".tab-painel").forEach(p => p.classList.remove("ativo"));
+      document.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("ativo"));
+      document.getElementById("tab-" + id).classList.add("ativo");
+      btn.classList.add("ativo");
+    }
+
+    // ── Modal pedido ───────────────────────────────────────
+    function abrirModalEditarPedido() {
+      const p = pedidoAtual;
+      document.getElementById("f-id").value            = p.id;
+      document.getElementById("f-descricao").value     = p.descricao || "";
+      document.getElementById("f-num-sap").value       = p.num_pedido_sap || "";
+      document.getElementById("f-valor").value         = p.valor || "";
+      document.getElementById("f-retencao").value      = p.perc_retencao || "";
+      document.getElementById("f-status").value        = p.status || "em negociação";
+      document.getElementById("f-data-emissao").value  = isoData(p.data_emissao);
+      document.getElementById("f-data-inicio").value   = isoData(p.data_inicio);
+      document.getElementById("f-termino").value       = isoData(p.termino_previsto);
+      document.getElementById("modal-pedido").classList.add("aberto");
+    }
+
+    function fecharModalPedido() {
+      document.getElementById("modal-pedido").classList.remove("aberto");
+    }
+
+    async function salvarPedido(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar-pedido");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        const dados = {
+          id:               document.getElementById("f-id").value,
+          descricao:        document.getElementById("f-descricao").value,
+          num_pedido_sap:   document.getElementById("f-num-sap").value,
+          valor:            parseFloat(document.getElementById("f-valor").value) || 0,
+          perc_retencao:    parseFloat(document.getElementById("f-retencao").value) || 0,
+          status:           document.getElementById("f-status").value,
+          data_emissao:     document.getElementById("f-data-emissao").value,
+          data_inicio:      document.getElementById("f-data-inicio").value,
+          termino_previsto: document.getElementById("f-termino").value,
+        };
+        await API.salvarPedido(dados);
+        fecharModalPedido();
+        await carregarPedido();
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Salvar";
+      }
+    }
+
+    // ── Modal item ─────────────────────────────────────────
+    function abrirModalNovoItem() {
+      document.getElementById("modal-item-titulo").textContent = "Novo item";
+      document.getElementById("form-item").reset();
+      document.getElementById("fi-id").value = "";
+      document.getElementById("fi-exec").value = "0";
+      document.getElementById("modal-item").classList.add("aberto");
+    }
+
+    function abrirModalEditarItem(id) {
+      const item = itensAtuais.find(i => String(i.id) === String(id));
+      if (!item) return;
+      document.getElementById("modal-item-titulo").textContent = "Editar item";
+      document.getElementById("fi-id").value       = item.id;
+      document.getElementById("fi-num").value      = item.num_item || "";
+      document.getElementById("fi-descricao").value= item.descricao || "";
+      document.getElementById("fi-unidade").value  = item.unidade || "";
+      document.getElementById("fi-qtd").value      = item.qtd_contratada || "";
+      document.getElementById("fi-preco").value    = item.preco_unitario || "";
+      document.getElementById("fi-exec").value     = item.perc_executado || 0;
+      document.getElementById("modal-item").classList.add("aberto");
+    }
+
+    function fecharModalItem() {
+      document.getElementById("modal-item").classList.remove("aberto");
+    }
+
+    async function salvarItem(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar-item");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        const dados = {
+          id:            document.getElementById("fi-id").value || null,
+          pedido_id:     pedidoId,
+          num_item:      document.getElementById("fi-num").value,
+          descricao:     document.getElementById("fi-descricao").value,
+          unidade:       document.getElementById("fi-unidade").value,
+          qtd_contratada:parseFloat(document.getElementById("fi-qtd").value) || 0,
+          preco_unitario:parseFloat(document.getElementById("fi-preco").value) || 0,
+          perc_executado:parseFloat(document.getElementById("fi-exec").value) || 0,
+        };
+        await API.salvarItem(dados);
+        fecharModalItem();
+        await carregarPedido();
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Salvar";
+      }
+    }
+
+    function pedirExclusaoItem(id) {
+      idExcluirItem = id;
+      document.getElementById("modal-excluir-item").classList.add("aberto");
+    }
+
+    function fecharModalExcluirItem() {
+      idExcluirItem = null;
+      document.getElementById("modal-excluir-item").classList.remove("aberto");
+    }
+
+    async function confirmarExclusaoItem() {
+      if (!idExcluirItem) return;
+      try {
+        await API.excluirItem(idExcluirItem);
+        fecharModalExcluirItem();
+        await carregarPedido();
+      } catch (err) {
+        alert("Erro ao excluir: " + err.message);
+      }
+    }
+
+    function sair(e) {
+      e.preventDefault();
+      clearToken();
+      location.href = "login.html";
+    }
+
+    // ── Utilitários ────────────────────────────────────────
+    function fmtBRL(v)  {
+      return new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(Number(v) || 0);
+    }
+    function fmtNum(v)  {
+      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 }).format(Number(v) || 0);
+    }
+    function fmtData(v) {
+      if (!v) return "—";
+      const d = new Date(v);
+      return isNaN(d) ? String(v) : d.toLocaleDateString("pt-BR");
+    }
+    function isoData(v) {
+      if (!v) return "";
+      const d = new Date(v);
+      return isNaN(d) ? "" : d.toISOString().slice(0, 10);
+    }
+    function esc(s) {
+      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    document.getElementById("modal-pedido").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalPedido();
+    });
+    document.getElementById("modal-item").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalItem();
+    });
+    document.getElementById("modal-excluir-item").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalExcluirItem();
+    });
+  </script>
+</body>
+</html>
