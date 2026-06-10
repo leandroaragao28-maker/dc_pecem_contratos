@@ -143,7 +143,7 @@ main {
 table { width: 100%; border-collapse: collapse; font-size: 0.82rem; }
 th {
   text-align: left;
-  padding: 7px 10px;
+  padding: 6px 10px;
   border-bottom: 2px solid var(--cor-borda);
   color: var(--cor-texto-m);
   font-weight: 600;
@@ -154,10 +154,12 @@ th {
   background: var(--cor-fundo);
 }
 td {
-  padding: 7px 10px;
+  padding: 5px 10px;
   border-bottom: 1px solid var(--cor-borda);
   vertical-align: middle;
 }
+/* Células de ação (botões edit/delete) nunca quebram linha */
+td.txt-direita { white-space: nowrap; }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: #EDF2FA; }
 .num { text-align: right; font-variant-numeric: tabular-nums; }
