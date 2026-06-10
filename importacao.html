@@ -314,7 +314,7 @@
       const est = estadoEnt[id];
       const sheets = workbook.SheetNames;
 
-      const { headers, dados } = getRows(est.sheet, est.linhaHeader);
+      const { headers, dados, colIdx } = getRows(est.sheet, est.linhaHeader);
 
       // Auto-mapear se mapa está vazio
       if (!est.mapa || Object.values(est.mapa).every(v => !v)) {
@@ -345,7 +345,7 @@
       const prevRows = dados.slice(0, 5).map(row => {
         const cells = ent.campos.map(c => {
           const h = est.mapa[c.key];
-          const v = h ? (row[headers.indexOf(h)] ?? "") : "";
+          const v = (h && colIdx[h] !== undefined) ? (row[colIdx[h]] ?? "") : "";
           return `<td>${esc(String(v))}</td>`;
         }).join("");
         return `<tr>${cells}</tr>`;
@@ -425,16 +425,15 @@
     async function iniciarImportacao(id) {
       const ent = ENTIDADES[id];
       const est = estadoEnt[id];
-      const { headers, dados } = getRows(est.sheet, est.linhaHeader);
+      const { dados, colIdx } = getRows(est.sheet, est.linhaHeader);
 
       // Construir array de objetos para importar
       const registros = dados.map(row => {
         const obj = {};
         ent.campos.forEach(c => {
           const h = est.mapa[c.key];
-          if (h) {
-            const idx = headers.indexOf(h);
-            if (idx >= 0) obj[c.key] = normalizarValor(row[idx], c.key);
+          if (h && colIdx[h] !== undefined) {
+            obj[c.key] = normalizarValor(row[colIdx[h]], c.key);
           }
         });
         return obj;
@@ -538,32 +537,46 @@
     // ── Utilitários ───────────────────────────────────────────
 
     function getRows(sheetName, linhaHeader) {
-      if (!workbook || !sheetName) return { headers: [], dados: [] };
+      if (!workbook || !sheetName) return { headers: [], dados: [], colIdx: {} };
       const ws   = workbook.Sheets[sheetName];
-      if (!ws) return { headers: [], dados: [] };
+      if (!ws) return { headers: [], dados: [], colIdx: {} };
       const all  = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", cellDates: true });
       const hIdx = (linhaHeader || 1) - 1;
-      const headers = (all[hIdx] || []).map(h => String(h ?? "").trim()).filter(h => h !== "");
+      const rawHeaders = (all[hIdx] || []).map(h => String(h ?? "").trim());
+      // colIdx maps each header name to its ORIGINAL column index in the raw row.
+      // This is critical: after filtering empty headers, array indices no longer
+      // correspond to column positions in the data rows.
+      const headers = [];
+      const colIdx  = {};
+      rawHeaders.forEach((h, i) => {
+        if (h !== "") {
+          headers.push(h);
+          if (colIdx[h] === undefined) colIdx[h] = i; // first occurrence wins on duplicates
+        }
+      });
       const dados = all.slice(hIdx + 1).filter(r => r.some(c => c !== "" && c !== null));
-      return { headers, dados };
+      return { headers, dados, colIdx };
     }
 
     function autoMapear(headers, campos) {
       const norm = s => String(s || "").toLowerCase()
         .normalize("NFD").replace(/[̀-ͯ]/g, "")
         .replace(/[^a-z0-9]+/g, " ").trim();
-      const mapa = {};
+      const mapa  = {};
+      const usados = new Set();
       campos.forEach(campo => {
         const aliases = [campo.key, ...campo.aliases].map(norm);
         const match = headers.find(h => {
+          if (usados.has(h)) return false; // cada coluna só pode ser usada uma vez
           const hn = norm(h);
           return aliases.some(a =>
             a === hn ||
-            (a.length >= 3 && hn.includes(a)) ||
-            (hn.length >= 3 && a.includes(hn))
+            (a.length >= 4 && hn.includes(a)) ||
+            (hn.length >= 4 && a.includes(hn))
           );
         });
         mapa[campo.key] = match || "";
+        if (match) usados.add(match);
       });
       return mapa;
     }
