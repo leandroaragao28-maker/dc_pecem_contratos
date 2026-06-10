@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importar dados — DC Pecém</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .dropzone {
+      border: 2px dashed var(--cor-borda);
+      border-radius: var(--raio);
+      padding: 52px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    .dropzone:hover, .dropzone.sobre {
+      border-color: var(--cor-primaria);
+      background: rgba(22,160,133,0.04);
+    }
+    .dropzone-icone { font-size: 2.8rem; margin-bottom: 12px; line-height: 1; }
+    .dropzone-texto { color: var(--cor-texto-m); font-size: 0.9rem; line-height: 1.5; }
+    .dropzone-texto strong { color: var(--cor-texto); }
+
+    .ent-tabs { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .ent-tab {
+      padding: 7px 18px; border-radius: var(--raio);
+      border: 1px solid var(--cor-borda); background: transparent;
+      cursor: pointer; font-size: 0.86rem; color: var(--cor-texto-m);
+      font-family: inherit; transition: all 0.15s;
+    }
+    .ent-tab:hover { border-color: var(--cor-primaria); color: var(--cor-primaria); }
+    .ent-tab.ativo { background: var(--cor-primaria); color: white; border-color: var(--cor-primaria); }
+
+    .mapa-table { width: 100%; border-collapse: collapse; }
+    .mapa-table th {
+      font-size: 0.78rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.4px; color: var(--cor-texto-m);
+      padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--cor-borda);
+    }
+    .mapa-table td { padding: 8px 12px; border-bottom: 1px solid var(--cor-borda); vertical-align: middle; font-size: 0.88rem; }
+    .mapa-table tr:last-child td { border-bottom: none; }
+    .mapa-table select { width: 100%; font-size: 0.85rem; }
+    .campo-req { color: #dc2626; font-weight: 600; margin-left: 2px; }
+
+    .prev-wrap { overflow: auto; max-height: 200px; border: 1px solid var(--cor-borda); border-radius: var(--raio); }
+    .prev-table { font-size: 0.8rem; border-collapse: collapse; min-width: 500px; width: 100%; }
+    .prev-table th { position: sticky; top: 0; background: var(--cor-fundo); padding: 7px 10px; text-align: left; border-bottom: 1px solid var(--cor-borda); font-weight: 600; font-size: 0.78rem; white-space: nowrap; }
+    .prev-table td { padding: 6px 10px; border-bottom: 1px solid var(--cor-borda); white-space: nowrap; }
+    .prev-table tr:last-child td { border-bottom: none; }
+
+    .progresso-bar { height: 12px; background: var(--cor-borda); border-radius: 6px; overflow: hidden; margin: 12px 0; }
+    .progresso-fill { height: 12px; background: var(--cor-primaria); border-radius: 6px; transition: width 0.35s ease; }
+
+    .res-stats { display: flex; gap: 16px; flex-wrap: wrap; margin-bottom: 20px; }
+    .res-stat { background: var(--cor-fundo); border-radius: var(--raio); padding: 16px 24px; text-align: center; flex: 1; min-width: 80px; }
+    .res-stat-num { font-size: 2.2rem; font-weight: 700; line-height: 1; }
+    .res-stat-label { font-size: 0.78rem; color: var(--cor-texto-m); margin-top: 4px; }
+
+    .log-area { background: var(--cor-fundo); border-radius: var(--raio); padding: 12px 14px; font-size: 0.82rem; max-height: 160px; overflow-y: auto; color: var(--cor-texto-m); }
+    .log-linha { padding: 2px 0; }
+
+    .formato-card { background: var(--cor-fundo); border-radius: var(--raio); padding: 14px 16px; }
+    .formato-card h4 { font-size: 0.82rem; font-weight: 600; margin-bottom: 8px; color: var(--cor-texto); }
+    .formato-campo { font-size: 0.78rem; color: var(--cor-texto-m); padding: 2px 0; }
+    .formato-campo .req { color: #dc2626; }
+
+    .arquivo-info {
+      display: flex; align-items: center; gap: 12px;
+      background: var(--cor-fundo); border-radius: var(--raio);
+      padding: 10px 14px; margin-bottom: 20px; font-size: 0.88rem;
+    }
+    .arquivo-info .nome { font-weight: 500; flex: 1; }
+    .arquivo-info .linhas { color: var(--cor-texto-m); font-size: 0.82rem; }
+  </style>
+</head>
+<body class="pagina">
+
+  <header>
+    <div>
+      <div style="font-size:0.78rem;opacity:0.75;margin-bottom:2px;">DC Pecém — Contratos</div>
+      <h1>Importar dados</h1>
+    </div>
+  </header>
+
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="importacao.html" class="ativo">Importar</a>
+    <a href="#" onclick="sair(event)">Sair</a>
+  </nav>
+
+  <main>
+
+    <!-- ── Etapa 1: Upload ───────────────────────────────────── -->
+    <div id="s1">
+      <div class="card" style="margin-bottom:16px;">
+        <h2 style="font-size:1rem;font-weight:600;margin-bottom:4px;">Selecionar arquivo</h2>
+        <p class="txt-muted" style="font-size:0.85rem;margin-bottom:20px;">Formatos aceitos: .xlsx, .xls, .csv</p>
+        <div class="dropzone" id="dropzone"
+             onclick="document.getElementById('file-inp').click()"
+             ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="soltar(event)">
+          <div class="dropzone-icone">📂</div>
+          <div class="dropzone-texto">
+            <strong>Clique para selecionar</strong> ou arraste o arquivo aqui
+          </div>
+          <input type="file" id="file-inp" accept=".xlsx,.xls,.csv" style="display:none" onchange="carregarArquivo(event)">
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--cor-texto-m);margin-bottom:12px;">Formatos esperados por entidade</div>
+        <p class="txt-muted" style="font-size:0.83rem;margin-bottom:14px;">Qualquer nome de coluna é aceito — o mapeamento é feito na próxima etapa. Campos marcados com <span style="color:#dc2626;font-weight:600;">*</span> são obrigatórios.</p>
+        <div id="guia-formatos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;"></div>
+      </div>
+    </div>
+
+    <!-- ── Etapa 2: Mapeamento ───────────────────────────────── -->
+    <div id="s2" style="display:none;">
+      <div class="arquivo-info">
+        <span style="font-size:1.3rem;">📄</span>
+        <div>
+          <div class="nome" id="s2-nome"></div>
+          <div class="linhas" id="s2-info"></div>
+        </div>
+        <button class="btn btn-secundario btn-sm" onclick="trocarArquivo()">Trocar arquivo</button>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <div style="font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--cor-texto-m);margin-bottom:14px;">Entidade a importar</div>
+        <div class="ent-tabs" id="ent-tabs"></div>
+        <div id="ent-painel"></div>
+      </div>
+    </div>
+
+    <!-- ── Etapa 3: Progresso ────────────────────────────────── -->
+    <div id="s3" style="display:none;">
+      <div class="card">
+        <h2 style="font-size:1rem;font-weight:600;margin-bottom:16px;" id="s3-titulo">Importando…</h2>
+        <div class="progresso-bar"><div class="progresso-fill" id="s3-fill" style="width:0%"></div></div>
+        <div style="font-size:0.82rem;color:var(--cor-texto-m);margin-bottom:12px;" id="s3-pct">0%</div>
+        <div class="log-area" id="s3-log"></div>
+      </div>
+    </div>
+
+    <!-- ── Etapa 4: Resultado ────────────────────────────────── -->
+    <div id="s4" style="display:none;">
+      <div class="card">
+        <h2 style="font-size:1rem;font-weight:600;margin-bottom:16px;">Importação concluída</h2>
+        <div class="res-stats" id="s4-stats"></div>
+        <div id="s4-erros"></div>
+        <div class="flex gap-8" style="margin-top:20px;">
+          <button class="btn btn-primario" onclick="novaImportacao()">Importar mais dados</button>
+          <a href="pedidos.html" class="btn btn-secundario">Ver pedidos</a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script>
+    if (!estaAutenticado()) location.href = "login.html";
+
+    // ── Definição das entidades ──────────────────────────────
+
+    const ENTIDADES = {
+      pedidos: {
+        label: "Pedidos",
+        apiMethod: "importarPedidos",
+        campos: [
+          { key: "num_pedido_sap",  label: "Nº SAP",           req: false, aliases: ["sap","num pedido","pedido sap","nrocontrato","n sap","numero sap","contrato","nro contrato"] },
+          { key: "descricao",       label: "Descrição",         req: true,  aliases: ["desc","descricao","objeto","nome","servico","servico","servico"] },
+          { key: "valor",           label: "Valor (R$)",        req: false, aliases: ["valor","montante","valor contratado","vl contrato","vl contratado"] },
+          { key: "perc_retencao",   label: "% Retenção",        req: false, aliases: ["retencao","retencao","perc retencao","taxa retencao"] },
+          { key: "status",          label: "Status",            req: false, aliases: ["status","situacao","situacao"] },
+          { key: "data_emissao",    label: "Data emissão",      req: false, aliases: ["data emissao","emissao","dt emissao","data emissao"] },
+          { key: "data_inicio",     label: "Data início",       req: false, aliases: ["data inicio","inicio","dt inicio","inicio obras"] },
+          { key: "termino_previsto",label: "Término previsto",  req: false, aliases: ["termino","termino","data termino","dt termino","prazo"] },
+        ]
+      },
+      itens: {
+        label: "Itens",
+        apiMethod: "importarItens",
+        campos: [
+          { key: "num_pedido_sap",  label: "Nº SAP do pedido", req: true,  aliases: ["sap","num pedido","pedido sap","nrocontrato","n sap","numero sap","contrato"] },
+          { key: "num_item",        label: "Nº Item",          req: true,  aliases: ["num item","item","n item","numero item","cod item","codigo","posicao","posicao"] },
+          { key: "descricao",       label: "Descrição",        req: true,  aliases: ["desc","descricao","objeto","nome","servico"] },
+          { key: "unidade",         label: "Unidade",          req: true,  aliases: ["unidade","un","unid","und","medida"] },
+          { key: "qtd_contratada",  label: "Qtd. Contratada",  req: true,  aliases: ["qtd contratada","quantidade","qtd","qtde","volume","qtd contratada"] },
+          { key: "preco_unitario",  label: "Preço Unitário",   req: true,  aliases: ["preco unitario","preco unitario","pu","preco","vl unit","valor unit"] },
+          { key: "perc_executado",  label: "% Executado",      req: false, aliases: ["executado","perc executado","campo","% exec"] },
+        ]
+      },
+      medicoes: {
+        label: "Medições",
+        apiMethod: "importarMedicoes",
+        campos: [
+          { key: "num_pedido_sap",  label: "Nº SAP do pedido", req: true,  aliases: ["sap","num pedido","pedido sap","nrocontrato","n sap","numero sap","contrato"] },
+          { key: "num_bm",          label: "Nº BM",            req: true,  aliases: ["num bm","bm","numero bm","n bm","medicao","medicao","boletim"] },
+          { key: "periodo",         label: "Período (MM/AAAA)",req: true,  aliases: ["periodo","periodo","period","data","competencia","competencia","mes"] },
+          { key: "status",          label: "Status",           req: false, aliases: ["status","situacao","situacao"] },
+        ]
+      },
+      medicao_itens: {
+        label: "Quantidades de BM",
+        apiMethod: "importarMedicaoItens",
+        campos: [
+          { key: "num_pedido_sap",  label: "Nº SAP do pedido", req: true,  aliases: ["sap","num pedido","pedido sap","nrocontrato","n sap","numero sap","contrato"] },
+          { key: "num_bm",          label: "Nº BM",            req: true,  aliases: ["num bm","bm","numero bm","n bm","medicao","boletim"] },
+          { key: "num_item",        label: "Nº Item",          req: true,  aliases: ["num item","item","n item","numero item","cod item","codigo","posicao"] },
+          { key: "qtd_medida",      label: "Qtd. Medida",      req: true,  aliases: ["qtd medida","quantidade medida","qtd med","qtde medida","medido","quantidade"] },
+        ]
+      }
+    };
+
+    // ── Estado global ────────────────────────────────────────
+
+    let workbook       = null;
+    let nomeArquivo    = "";
+    let entAtiva       = "pedidos";
+    const estadoEnt    = {};  // { [entId]: { sheet, linhaHeader, mapa } }
+
+    Object.keys(ENTIDADES).forEach(id => {
+      estadoEnt[id] = {
+        sheet:       "",
+        linhaHeader: 1,
+        mapa:        carrgarMapaLocal(id),
+      };
+    });
+
+    // ── Guia de formatos (Etapa 1) ───────────────────────────
+
+    document.getElementById("guia-formatos").innerHTML =
+      Object.entries(ENTIDADES).map(([, ent]) => `
+        <div class="formato-card">
+          <h4>${ent.label}</h4>
+          ${ent.campos.map(c => `
+            <div class="formato-campo">
+              ${c.req ? `<span class="req">*</span> ` : "· "}${c.label}
+            </div>`).join("")}
+        </div>`).join("");
+
+    // ── Dropzone ─────────────────────────────────────────────
+
+    function dragOver(e)  { e.preventDefault(); document.getElementById("dropzone").classList.add("sobre"); }
+    function dragLeave()  { document.getElementById("dropzone").classList.remove("sobre"); }
+    function soltar(e)    { e.preventDefault(); dragLeave(); processarArquivo(e.dataTransfer.files[0]); }
+    function carregarArquivo(e) { processarArquivo(e.target.files[0]); }
+
+    function processarArquivo(file) {
+      if (!file) return;
+      nomeArquivo = file.name;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const data = new Uint8Array(ev.target.result);
+        workbook = XLSX.read(data, { type: "array", cellDates: true });
+        entrarEtapa2();
+      };
+      reader.readAsArrayBuffer(file);
+    }
+
+    function trocarArquivo() {
+      workbook = null;
+      document.getElementById("file-inp").value = "";
+      mostrar("s1");
+    }
+
+    // ── Etapa 2 ───────────────────────────────────────────────
+
+    function entrarEtapa2() {
+      // Inicializar sheet padrão para cada entidade
+      const sheets = workbook.SheetNames;
+      Object.keys(ENTIDADES).forEach(id => {
+        if (!estadoEnt[id].sheet || !sheets.includes(estadoEnt[id].sheet)) {
+          estadoEnt[id].sheet = sheets[0];
+        }
+      });
+
+      // Construir tabs
+      document.getElementById("ent-tabs").innerHTML =
+        Object.entries(ENTIDADES).map(([id, ent]) => `
+          <button class="ent-tab${id === entAtiva ? " ativo" : ""}"
+                  onclick="selecionarEntidade('${id}')">${ent.label}</button>`
+        ).join("");
+
+      renderPainel();
+      mostrar("s2");
+      atualizarInfoArquivo();
+    }
+
+    function atualizarInfoArquivo() {
+      document.getElementById("s2-nome").textContent = nomeArquivo;
+      const est = estadoEnt[entAtiva];
+      const rows = getRows(est.sheet, est.linhaHeader);
+      document.getElementById("s2-info").textContent =
+        `${workbook.SheetNames.length} aba(s) · ${rows.dados.length} linha(s) de dados`;
+    }
+
+    function selecionarEntidade(id) {
+      entAtiva = id;
+      document.querySelectorAll(".ent-tab").forEach((btn, i) => {
+        btn.classList.toggle("ativo", Object.keys(ENTIDADES)[i] === id);
+      });
+      renderPainel();
+      atualizarInfoArquivo();
+    }
+
+    function renderPainel() {
+      const id  = entAtiva;
+      const ent = ENTIDADES[id];
+      const est = estadoEnt[id];
+      const sheets = workbook.SheetNames;
+
+      const { headers, dados } = getRows(est.sheet, est.linhaHeader);
+
+      // Auto-mapear se mapa está vazio
+      if (!est.mapa || Object.values(est.mapa).every(v => !v)) {
+        est.mapa = autoMapear(headers, ent.campos);
+        salvarMapaLocal(id, est.mapa);
+      }
+
+      const sheetOpts = sheets.map(s =>
+        `<option value="${esc(s)}"${s === est.sheet ? " selected" : ""}>${esc(s)}</option>`
+      ).join("");
+
+      const mapaRows = ent.campos.map(c => {
+        const colOpts = [
+          `<option value="">(Não importar)</option>`,
+          ...headers.map(h =>
+            `<option value="${esc(h)}"${est.mapa[c.key] === h ? " selected" : ""}>${esc(h)}</option>`)
+        ].join("");
+        return `
+          <tr>
+            <td>
+              ${c.label}${c.req ? `<span class="campo-req">*</span>` : ""}
+              <div style="font-size:0.75rem;color:var(--cor-texto-m);">${c.key}</div>
+            </td>
+            <td><select onchange="atualizarMapa('${id}','${c.key}',this.value)">${colOpts}</select></td>
+          </tr>`;
+      }).join("");
+
+      const prevRows = dados.slice(0, 5).map(row => {
+        const cells = ent.campos.map(c => {
+          const h = est.mapa[c.key];
+          const v = h ? (row[headers.indexOf(h)] ?? "") : "";
+          return `<td>${esc(String(v))}</td>`;
+        }).join("");
+        return `<tr>${cells}</tr>`;
+      }).join("");
+
+      const prevCabecalho = ent.campos.map(c =>
+        `<th>${esc(c.label)}</th>`).join("");
+
+      document.getElementById("ent-painel").innerHTML = `
+        <div style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-end;margin-bottom:16px;">
+          <div class="form-grupo" style="margin:0;flex:1;min-width:140px;">
+            <label>Aba da planilha</label>
+            <select onchange="atualizarSheet('${id}',this.value)">${sheetOpts}</select>
+          </div>
+          <div class="form-grupo" style="margin:0;width:150px;">
+            <label>Linha do cabeçalho</label>
+            <input type="number" min="1" max="20" value="${est.linhaHeader}"
+                   style="width:80px;"
+                   onchange="atualizarLinhaHeader('${id}',parseInt(this.value)||1)">
+          </div>
+        </div>
+
+        <div style="font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--cor-texto-m);margin-bottom:10px;">
+          Mapeamento de colunas
+        </div>
+        <div style="overflow:auto;border:1px solid var(--cor-borda);border-radius:var(--raio);margin-bottom:16px;">
+          <table class="mapa-table">
+            <thead><tr><th style="width:45%;">Campo do sistema</th><th>Coluna no arquivo</th></tr></thead>
+            <tbody>${mapaRows}</tbody>
+          </table>
+        </div>
+
+        <div style="font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--cor-texto-m);margin-bottom:8px;">
+          Pré-visualização (primeiras 5 linhas)
+        </div>
+        <div class="prev-wrap" style="margin-bottom:20px;">
+          ${dados.length === 0
+            ? `<div class="estado-msg" style="font-size:0.86rem;">Nenhum dado encontrado nesta aba/linha.</div>`
+            : `<table class="prev-table">
+                <thead><tr>${prevCabecalho}</tr></thead>
+                <tbody>${prevRows}</tbody>
+              </table>`}
+        </div>
+
+        <button class="btn btn-primario" onclick="iniciarImportacao('${id}')"
+                ${dados.length === 0 ? "disabled" : ""}>
+          Importar ${dados.length} registro${dados.length !== 1 ? "s" : ""}
+        </button>
+        <span class="txt-muted" style="font-size:0.82rem;margin-left:12px;">
+          (registros existentes serão atualizados)
+        </span>`;
+    }
+
+    function atualizarSheet(id, sheet) {
+      estadoEnt[id].sheet = sheet;
+      // Limpar mapa para re-detectar com os novos headers
+      estadoEnt[id].mapa = {};
+      renderPainel();
+      atualizarInfoArquivo();
+    }
+
+    function atualizarLinhaHeader(id, linha) {
+      estadoEnt[id].linhaHeader = linha;
+      estadoEnt[id].mapa = {};
+      renderPainel();
+      atualizarInfoArquivo();
+    }
+
+    function atualizarMapa(id, key, valor) {
+      estadoEnt[id].mapa[key] = valor;
+      salvarMapaLocal(id, estadoEnt[id].mapa);
+      renderPainel();
+    }
+
+    // ── Importação ────────────────────────────────────────────
+
+    async function iniciarImportacao(id) {
+      const ent = ENTIDADES[id];
+      const est = estadoEnt[id];
+      const { headers, dados } = getRows(est.sheet, est.linhaHeader);
+
+      // Construir array de objetos para importar
+      const registros = dados.map(row => {
+        const obj = {};
+        ent.campos.forEach(c => {
+          const h = est.mapa[c.key];
+          if (h) {
+            const idx = headers.indexOf(h);
+            if (idx >= 0) obj[c.key] = normalizarValor(row[idx], c.key);
+          }
+        });
+        return obj;
+      }).filter(obj => Object.values(obj).some(v => v !== "" && v !== null && v !== undefined));
+
+      if (!registros.length) {
+        alert("Nenhum registro válido para importar após o mapeamento.");
+        return;
+      }
+
+      mostrar("s3");
+      document.getElementById("s3-titulo").textContent = `Importando ${ent.label}…`;
+      document.getElementById("s3-log").innerHTML = "";
+      adicionarLog(`Iniciando importação de ${registros.length} registro(s)…`);
+
+      const LOTE = 20;
+      const lotes = [];
+      for (let i = 0; i < registros.length; i += LOTE) lotes.push(registros.slice(i, i + LOTE));
+
+      let totalCriados = 0, totalAtualizados = 0;
+      const todosErros = [];
+
+      for (let i = 0; i < lotes.length; i++) {
+        const pct = Math.round(((i) / lotes.length) * 100);
+        atualizarProgresso(pct);
+        adicionarLog(`Lote ${i + 1}/${lotes.length} (${lotes[i].length} registros)…`);
+
+        try {
+          const res = await API[ent.apiMethod](lotes[i]);
+          totalCriados    += res.criados    || 0;
+          totalAtualizados += res.atualizados || 0;
+          if (res.erros && res.erros.length) {
+            todosErros.push(...res.erros);
+            adicionarLog(`  ⚠ ${res.erros.length} erro(s) no lote.`);
+          }
+        } catch (err) {
+          adicionarLog(`  ✗ Erro no lote ${i + 1}: ${err.message}`);
+          todosErros.push({ linha: `Lote ${i + 1}`, erro: err.message });
+        }
+      }
+
+      atualizarProgresso(100);
+      adicionarLog("Concluído.");
+      await delay(400);
+      mostrarResultado(ent.label, registros.length, totalCriados, totalAtualizados, todosErros);
+    }
+
+    function mostrarResultado(entLabel, total, criados, atualizados, erros) {
+      const corCriados    = criados    > 0 ? "var(--cor-primaria)" : "var(--cor-texto-m)";
+      const corAtualizados = atualizados > 0 ? "#378ADD"            : "var(--cor-texto-m)";
+      const corErros      = erros.length > 0 ? "#dc2626"           : "var(--cor-texto-m)";
+
+      document.getElementById("s4-stats").innerHTML = `
+        <div class="res-stat">
+          <div class="res-stat-num" style="color:var(--cor-texto-m);">${total}</div>
+          <div class="res-stat-label">Total processado</div>
+        </div>
+        <div class="res-stat">
+          <div class="res-stat-num" style="color:${corCriados};">${criados}</div>
+          <div class="res-stat-label">Criados</div>
+        </div>
+        <div class="res-stat">
+          <div class="res-stat-num" style="color:${corAtualizados};">${atualizados}</div>
+          <div class="res-stat-label">Atualizados</div>
+        </div>
+        <div class="res-stat">
+          <div class="res-stat-num" style="color:${corErros};">${erros.length}</div>
+          <div class="res-stat-label">Erros</div>
+        </div>`;
+
+      if (erros.length) {
+        const linhas = erros.map(e =>
+          `<tr><td style="color:var(--cor-texto-m);">${esc(String(e.linha || ""))}</td><td style="color:#dc2626;">${esc(e.erro)}</td></tr>`
+        ).join("");
+        document.getElementById("s4-erros").innerHTML = `
+          <div style="font-size:0.8rem;font-weight:600;text-transform:uppercase;letter-spacing:0.4px;color:var(--cor-texto-m);margin-bottom:8px;">
+            Erros detalhados
+          </div>
+          <div style="overflow:auto;border:1px solid var(--cor-borda);border-radius:var(--raio);max-height:220px;">
+            <table style="width:100%;border-collapse:collapse;font-size:0.83rem;">
+              <thead>
+                <tr style="background:var(--cor-fundo);">
+                  <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--cor-borda);width:80px;">Linha</th>
+                  <th style="padding:7px 12px;text-align:left;border-bottom:1px solid var(--cor-borda);">Mensagem</th>
+                </tr>
+              </thead>
+              <tbody>${linhas}</tbody>
+            </table>
+          </div>`;
+      } else {
+        document.getElementById("s4-erros").innerHTML = "";
+      }
+
+      mostrar("s4");
+    }
+
+    function novaImportacao() {
+      mostrar("s2");
+    }
+
+    // ── Utilitários ───────────────────────────────────────────
+
+    function getRows(sheetName, linhaHeader) {
+      if (!workbook || !sheetName) return { headers: [], dados: [] };
+      const ws   = workbook.Sheets[sheetName];
+      if (!ws) return { headers: [], dados: [] };
+      const all  = XLSX.utils.sheet_to_json(ws, { header: 1, defval: "", cellDates: true });
+      const hIdx = (linhaHeader || 1) - 1;
+      const headers = (all[hIdx] || []).map(h => String(h ?? "").trim()).filter(h => h !== "");
+      const dados = all.slice(hIdx + 1).filter(r => r.some(c => c !== "" && c !== null));
+      return { headers, dados };
+    }
+
+    function autoMapear(headers, campos) {
+      const norm = s => String(s || "").toLowerCase()
+        .normalize("NFD").replace(/[̀-ͯ]/g, "")
+        .replace(/[^a-z0-9]+/g, " ").trim();
+      const mapa = {};
+      campos.forEach(campo => {
+        const aliases = [campo.key, ...campo.aliases].map(norm);
+        const match = headers.find(h => {
+          const hn = norm(h);
+          return aliases.some(a =>
+            a === hn ||
+            (a.length >= 3 && hn.includes(a)) ||
+            (hn.length >= 3 && a.includes(hn))
+          );
+        });
+        mapa[campo.key] = match || "";
+      });
+      return mapa;
+    }
+
+    function normalizarValor(val, key) {
+      if (val === null || val === undefined || val === "") return "";
+      if (val instanceof Date && !isNaN(val)) {
+        const y = val.getFullYear();
+        const m = String(val.getMonth() + 1).padStart(2, "0");
+        const d = String(val.getDate()).padStart(2, "0");
+        return `${y}-${m}-${d}`;
+      }
+      const numericos = ["valor","perc_retencao","qtd_contratada","preco_unitario","perc_executado","qtd_medida","num_bm","num_item"];
+      if (numericos.includes(key)) {
+        if (typeof val === "number") return val;
+        const s = String(val).replace(/[R$\s.]/g, "").replace(",", ".");
+        const n = parseFloat(s);
+        return isNaN(n) ? "" : n;
+      }
+      return String(val).trim();
+    }
+
+    function carrgarMapaLocal(entId) {
+      try { return JSON.parse(localStorage.getItem("dc_mapa_" + entId) || "{}"); }
+      catch { return {}; }
+    }
+
+    function salvarMapaLocal(entId, mapa) {
+      try { localStorage.setItem("dc_mapa_" + entId, JSON.stringify(mapa)); }
+      catch {}
+    }
+
+    function atualizarProgresso(pct) {
+      document.getElementById("s3-fill").style.width = pct + "%";
+      document.getElementById("s3-pct").textContent = pct + "%";
+    }
+
+    function adicionarLog(msg) {
+      const el = document.getElementById("s3-log");
+      el.innerHTML += `<div class="log-linha">${esc(msg)}</div>`;
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function mostrar(id) {
+      ["s1","s2","s3","s4"].forEach(s => {
+        document.getElementById(s).style.display = s === id ? "" : "none";
+      });
+    }
+
+    function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+    function esc(s) {
+      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+
+    function sair(e) {
+      e.preventDefault();
+      clearToken();
+      location.href = "login.html";
+    }
+  </script>
+</body>
+</html>

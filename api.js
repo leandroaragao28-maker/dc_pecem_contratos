@@ -49,4 +49,9 @@ const API = {
   faturamento:       (pedido_id) => api("getFaturamento", { pedido_id }),
   salvarFaturamento: (d)         => api("saveFaturamento", {}, d),
   excluirFaturamento:(id)        => api("deleteFaturamento", { id }),
+
+  importarPedidos:      (dados) => api("importarPedidos",      {}, { dados }),
+  importarItens:        (dados) => api("importarItens",        {}, { dados }),
+  importarMedicoes:     (dados) => api("importarMedicoes",     {}, { dados }),
+  importarMedicaoItens: (dados) => api("importarMedicaoItens", {}, { dados }),
 };
