@@ -1,0 +1,3 @@
+const CONFIG = {
+  API_URL: "COLAR_URL_DO_APPS_SCRIPT_AQUI",
+};

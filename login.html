@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>DC Pecém — Contratos</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    .caixa {
+      background: white;
+      border-radius: var(--raio-lg);
+      border: 1px solid var(--cor-borda);
+      padding: 40px 44px;
+      width: 100%;
+      max-width: 380px;
+      text-align: center;
+    }
+    .logo { font-size: 1.25rem; font-weight: 600; color: var(--cor-primaria); margin-bottom: 4px; }
+    .sub  { font-size: 0.88rem; color: var(--cor-texto-m); margin-bottom: 28px; }
+    .caixa input { text-align: center; letter-spacing: 2px; }
+    .caixa .btn  { width: 100%; justify-content: center; margin-top: 8px; padding: 10px; }
+    .erro { color: #dc2626; font-size: 0.83rem; margin-top: 10px; min-height: 20px; }
+  </style>
+</head>
+<body>
+  <div class="caixa">
+    <div class="logo">DC Pecém — Contratos</div>
+    <div class="sub">Digite o token de acesso para continuar</div>
+    <div class="form-grupo">
+      <input type="password" id="token" placeholder="••••••••••••" autocomplete="off">
+    </div>
+    <button class="btn btn-primario" onclick="entrar()">Entrar</button>
+    <div class="erro" id="msg-erro"></div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script>
+    if (estaAutenticado()) location.href = "index.html";
+
+    document.getElementById("token").addEventListener("keydown", e => {
+      if (e.key === "Enter") entrar();
+    });
+
+    async function entrar() {
+      const token = document.getElementById("token").value.trim();
+      if (!token) return;
+      setToken(token);
+      try {
+        const res = await API.dashboard();
+        if (res) location.href = "index.html";
+      } catch {
+        clearToken();
+        document.getElementById("msg-erro").textContent = "Token inválido. Tente novamente.";
+      }
+    }
+  </script>
+</body>
+</html>
