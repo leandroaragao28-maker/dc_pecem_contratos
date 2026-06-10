@@ -3,17 +3,197 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>DC Pecém — Contratos</title>
+  <title>Dashboard — DC Pecém</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    .status-linha { margin-bottom: 14px; }
+    .status-linha .label { display: flex; justify-content: space-between; font-size: 0.84rem; margin-bottom: 4px; }
+    .status-linha .label strong { font-weight: 500; }
+    .status-linha .label span  { color: var(--cor-texto-m); }
+    .barra-status { height: 10px; background: var(--cor-borda); border-radius: 5px; overflow: hidden; }
+    .barra-status div { height: 10px; border-radius: 5px; transition: width 0.4s ease; }
+
+    .alerta-item { display: flex; align-items: flex-start; gap: 10px; padding: 9px 12px; border-radius: var(--raio); margin-bottom: 8px; font-size: 0.84rem; }
+    .alerta-item:last-child { margin-bottom: 0; }
+    .alerta-dot  { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 4px; }
+    .alerta-am   { background: var(--cor-alerta-am);  color: var(--cor-alerta-am-t); }
+    .alerta-am .alerta-dot   { background: var(--cor-alerta-am-t); }
+    .alerta-vm   { background: var(--cor-alerta-vm);  color: var(--cor-alerta-vm-t); }
+    .alerta-vm .alerta-dot   { background: var(--cor-alerta-vm-t); }
+    .alerta-az   { background: var(--cor-alerta-az);  color: var(--cor-alerta-az-t); }
+    .alerta-az .alerta-dot   { background: var(--cor-alerta-az-t); }
+
+    .ranking-row { cursor: pointer; transition: background 0.1s; }
+    .ranking-row:hover td { background: var(--cor-fundo) !important; }
+
+    .secao-titulo { font-size: 0.82rem; font-weight: 600; color: var(--cor-texto-m); text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 14px; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+    @media (max-width: 720px) { .grid-2 { grid-template-columns: 1fr; } }
+  </style>
 </head>
-<body>
+<body class="pagina">
+
+  <header>
+    <div>
+      <div style="font-size:0.78rem;opacity:0.75;margin-bottom:2px;">DC Pecém — Contratos</div>
+      <h1>Dashboard</h1>
+    </div>
+    <button onclick="carregarDashboard()"
+            style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:white;padding:7px 14px;border-radius:var(--raio);cursor:pointer;font-size:0.88rem;font-family:inherit;">
+      ↺ Atualizar
+    </button>
+  </header>
+
+  <nav>
+    <a href="index.html" class="ativo">Dashboard</a>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="#" onclick="sair(event)">Sair</a>
+  </nav>
+
+  <main id="conteudo">
+    <div class="estado-msg">Carregando…</div>
+  </main>
+
   <script src="config.js"></script>
   <script src="api.js"></script>
   <script>
-    if (!estaAutenticado()) {
+    if (!estaAutenticado()) location.href = "login.html";
+
+    const COR_STATUS = {
+      "em negociação":    "#888780",
+      "aguardando pedido":"#EF9F27",
+      "pedido emitido":   "#378ADD",
+      "concluído":        "#1D9E75",
+    };
+
+    const TIPO_ALERTA = {
+      medicao_parada:    { cls: "alerta-am", label: "Medição parada" },
+      glosa_alta:        { cls: "alerta-vm", label: "Glosa alta" },
+      retencao_pendente: { cls: "alerta-az", label: "Retenção" },
+    };
+
+    carregarDashboard();
+
+    async function carregarDashboard() {
+      document.getElementById("conteudo").innerHTML = `<div class="estado-msg">Carregando…</div>`;
+      try {
+        const res = await API.dashboard();
+        renderDashboard(res);
+      } catch (e) {
+        document.getElementById("conteudo").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro ao carregar: ${e.message}</div>`;
+      }
+    }
+
+    function renderDashboard({ cartoes, porStatus, ranking, alertas }) {
+      const maxValorStatus = Math.max(...porStatus.map(s => s.valor), 1);
+
+      // ── Cartões ──────────────────────────────────────────
+      const htmlCartoes = `
+        <div class="grid-cartoes mb-24">
+          ${cartao("Contratado",       cartoes.contratado)}
+          ${cartao("Medido",           cartoes.medido,           cartoes.contratado)}
+          ${cartao("Faturado líquido", cartoes.faturadoLiquido,  cartoes.medido)}
+          ${cartao("Saldo a medir",    cartoes.saldoMedir)}
+        </div>`;
+
+      // ── Status + Alertas ─────────────────────────────────
+      const htmlStatus = `
+        <div class="card" style="padding:20px 24px;">
+          <div class="secao-titulo">Pedidos por status</div>
+          ${porStatus.map(s => `
+            <div class="status-linha">
+              <div class="label">
+                <strong>${s.status}</strong>
+                <span>${s.qtd} pedido${s.qtd !== 1 ? "s" : ""} · ${fmtBRL(s.valor)}</span>
+              </div>
+              <div class="barra-status">
+                <div style="width:${s.valor > 0 ? ((s.valor / maxValorStatus) * 100).toFixed(1) : 0}%;background:${COR_STATUS[s.status] || "#888"};"></div>
+              </div>
+            </div>`).join("")}
+        </div>`;
+
+      const htmlAlertas = `
+        <div class="card" style="padding:20px 24px;">
+          <div class="secao-titulo">Alertas</div>
+          ${!alertas.length
+            ? `<div class="txt-muted" style="font-size:0.88rem;padding:8px 0;">Nenhum alerta no momento.</div>`
+            : alertas.map(a => {
+                const cfg = TIPO_ALERTA[a.tipo] || { cls: "alerta-az", label: a.tipo };
+                const texto = a.descricao
+                  ? `<strong>${esc(a.descricao)}</strong> — ${esc(a.detalhe)}`
+                  : esc(a.detalhe);
+                const link = a.pedido_id
+                  ? `<a href="pedido.html?id=${a.pedido_id}" style="color:inherit;text-decoration:underline;margin-left:8px;font-size:0.8rem;">Ver pedido</a>`
+                  : "";
+                return `<div class="alerta-item ${cfg.cls}"><div class="alerta-dot"></div><div>${texto}${link}</div></div>`;
+              }).join("")}
+        </div>`;
+
+      // ── Ranking ──────────────────────────────────────────
+      const htmlRanking = `
+        <div class="card" style="padding:0;overflow:hidden;">
+          <div style="padding:16px 24px 12px;border-bottom:1px solid var(--cor-borda);">
+            <div class="secao-titulo" style="margin:0;">Ranking — saldo a faturar</div>
+          </div>
+          ${!ranking.length
+            ? `<div class="estado-msg">Nenhum pedido com saldo a faturar.</div>`
+            : `<div class="tabela-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th style="width:50px;">ID</th>
+                      <th>Descrição</th>
+                      <th class="num" style="width:120px;">Medido</th>
+                      <th class="num" style="width:120px;">Faturado</th>
+                      <th class="num" style="width:130px;">Saldo a faturar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    ${ranking.map((r, i) => `
+                      <tr class="ranking-row" onclick="location.href='pedido.html?id=${r.id}'">
+                        <td><strong>#${r.id}</strong></td>
+                        <td>
+                          <div style="display:flex;align-items:center;gap:10px;">
+                            <span style="min-width:20px;font-size:0.78rem;color:var(--cor-texto-m);font-weight:600;">${i + 1}º</span>
+                            ${esc(r.descricao)}
+                          </div>
+                        </td>
+                        <td class="num txt-muted">${fmtBRL(r.medido)}</td>
+                        <td class="num txt-muted">${fmtBRL(r.faturadoBruto)}</td>
+                        <td class="num" style="font-weight:600;color:var(--cor-primaria);">${fmtBRL(r.saldoFaturar)}</td>
+                      </tr>`).join("")}
+                  </tbody>
+                </table>
+              </div>`}
+        </div>`;
+
+      document.getElementById("conteudo").innerHTML =
+        htmlCartoes +
+        `<div class="grid-2">${htmlStatus}${htmlAlertas}</div>` +
+        htmlRanking;
+    }
+
+    function cartao(titulo, valor, base) {
+      const pct = base > 0 ? ` <span style="font-size:0.78rem;color:var(--cor-texto-m);font-weight:400;">(${((valor / base) * 100).toFixed(1)}%)</span>` : "";
+      return `
+        <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
+          <div class="card-titulo">${titulo}</div>
+          <div class="card-valor" style="font-size:1.15rem;">${fmtBRL(valor)}${pct}</div>
+        </div>`;
+    }
+
+    function sair(e) {
+      e.preventDefault();
+      clearToken();
       location.href = "login.html";
-    } else {
-      location.href = "pedidos.html";
+    }
+
+    function fmtBRL(v) {
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0);
+    }
+    function esc(s) {
+      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     }
   </script>
 </body>
