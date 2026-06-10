@@ -5,6 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Pedidos — DC Pecém</title>
   <link rel="stylesheet" href="style.css">
+  <style>
+    /* Alinhamento R$ em colunas monetárias */
+    .val-brl { display: flex; justify-content: flex-end; align-items: baseline; gap: 3px; }
+    .val-brl .s { color: var(--cor-texto-m); font-size: 0.73rem; flex-shrink: 0; }
+    .val-brl .n { font-variant-numeric: tabular-nums; min-width: 88px; text-align: right; }
+
+    /* Legenda de status */
+    .legenda-status { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 0.75rem; color: var(--cor-texto-m); }
+    .legenda-status span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
+    .legenda-status .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+
+    /* Nº PED com fonte mono para melhor alinhamento */
+    .num-ped { font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
+
+    @media (max-width: 900px) { .col-exec, .col-med, .col-fat { display: none; } }
+  </style>
 </head>
 <body class="pagina">
 
@@ -35,8 +51,16 @@
         <button class="btn btn-secundario btn-sm filtro" data-status="pedido emitido">Pedido emitido</button>
         <button class="btn btn-secundario btn-sm filtro" data-status="concluído">Concluído</button>
       </div>
-      <input type="search" id="busca" placeholder="Buscar por descrição ou nº SAP…"
+      <input type="search" id="busca" placeholder="Buscar por descrição ou Nº PED…"
              style="width:260px;margin-left:auto;" oninput="renderTabela()">
+    </div>
+
+    <!-- Legenda de status -->
+    <div class="legenda-status mb-16">
+      <span><span class="dot" style="background:var(--cor-status-neg-t);opacity:0.6;"></span>EN = Em negociação</span>
+      <span><span class="dot" style="background:var(--cor-status-ag-t);opacity:0.8;"></span>AP = Aguardando pedido</span>
+      <span><span class="dot" style="background:var(--cor-status-em-t);opacity:0.8;"></span>PE = Pedido emitido</span>
+      <span><span class="dot" style="background:var(--cor-status-ok-t);opacity:0.8;"></span>C = Concluído</span>
     </div>
 
     <!-- Tabela -->
@@ -45,17 +69,19 @@
         <table id="tbl-pedidos">
           <thead>
             <tr>
-              <th style="width:60px;">ID</th>
-              <th style="width:120px;">Nº SAP</th>
+              <th style="width:48px;">ID</th>
+              <th style="width:80px;">Nº PED</th>
               <th>Descrição</th>
-              <th style="width:130px;" class="num">Valor contratado</th>
-              <th style="width:130px;">Status</th>
-              <th style="width:80px;">Término</th>
-              <th style="width:80px;"></th>
+              <th class="num" style="width:130px;">R$ PEDIDO</th>
+              <th class="num col-exec" style="width:130px;">R$ EXECUTADO</th>
+              <th class="num col-med"  style="width:130px;">R$ MEDIDO</th>
+              <th class="num col-fat"  style="width:130px;">R$ FATURADO</th>
+              <th style="width:50px;">Status</th>
+              <th style="width:70px;"></th>
             </tr>
           </thead>
           <tbody id="corpo-tabela">
-            <tr><td colspan="7" class="estado-msg">Carregando…</td></tr>
+            <tr><td colspan="9" class="estado-msg">Carregando…</td></tr>
           </tbody>
         </table>
       </div>
@@ -133,10 +159,16 @@
   <script src="api.js"></script>
   <script>
     const BADGES = {
-      "em negociação":   "badge badge-neg",
+      "em negociação":    "badge badge-neg",
       "aguardando pedido":"badge badge-ag",
-      "pedido emitido":  "badge badge-em",
-      "concluído":       "badge badge-ok",
+      "pedido emitido":   "badge badge-em",
+      "concluído":        "badge badge-ok",
+    };
+    const STATUS_ABREV = {
+      "em negociação":    "EN",
+      "aguardando pedido":"AP",
+      "pedido emitido":   "PE",
+      "concluído":        "C",
     };
 
     let pedidos = [];
@@ -164,7 +196,7 @@
         renderTabela();
       } catch (e) {
         document.getElementById("corpo-tabela").innerHTML =
-          `<tr><td colspan="7" class="estado-msg" style="color:#dc2626;">Erro ao carregar: ${e.message}</td></tr>`;
+          `<tr><td colspan="9" class="estado-msg" style="color:#dc2626;">Erro ao carregar: ${e.message}</td></tr>`;
       }
     }
 
@@ -175,28 +207,31 @@
         const passaFiltro = filtroAtivo === "todos" || p.status === filtroAtivo;
         const passaBusca  = !busca ||
           (p.descricao || "").toLowerCase().includes(busca) ||
-          (p.num_pedido_sap || "").toLowerCase().includes(busca);
+          String(p.num_pedido_sap || "").toLowerCase().includes(busca) ||
+          fmtNumPed(p.num_pedido_sap).includes(busca);
         return passaFiltro && passaBusca;
       });
 
       if (!lista.length) {
         document.getElementById("corpo-tabela").innerHTML =
-          `<tr><td colspan="7" class="estado-msg">Nenhum pedido encontrado.</td></tr>`;
+          `<tr><td colspan="9" class="estado-msg">Nenhum pedido encontrado.</td></tr>`;
         return;
       }
 
       document.getElementById("corpo-tabela").innerHTML = lista.map(p => `
         <tr>
           <td><strong>#${p.id}</strong></td>
-          <td class="txt-muted">${p.num_pedido_sap || "—"}</td>
+          <td class="txt-muted num-ped">${fmtNumPed(p.num_pedido_sap)}</td>
           <td>
             <a href="pedido.html?id=${p.id}" style="color:var(--cor-primaria);text-decoration:none;font-weight:500;">
               ${esc(p.descricao)}
             </a>
           </td>
-          <td class="num">${fmtBRL(p.valor)}</td>
-          <td><span class="${BADGES[p.status] || 'badge'}">${p.status || '—'}</span></td>
-          <td class="txt-muted">${fmtData(p.termino_previsto)}</td>
+          <td>${brl(p.valor)}</td>
+          <td class="col-exec">${brl(p.executado)}</td>
+          <td class="col-med">${brl(p.medido)}</td>
+          <td class="col-fat">${brl(p.faturadoBruto)}</td>
+          <td><span class="${BADGES[p.status] || 'badge'}" title="${esc(p.status)}">${STATUS_ABREV[p.status] || p.status || '—'}</span></td>
           <td class="txt-direita">
             <button class="btn btn-secundario btn-sm" onclick="abrirModalEditar(${p.id})" title="Editar">✏️</button>
             <button class="btn btn-secundario btn-sm" onclick="pedirExclusao(${p.id})" title="Excluir" style="margin-left:4px;">🗑️</button>
@@ -293,6 +328,15 @@
     // ── Utilitários ────────────────────────────────────────
     function fmtBRL(v) {
       return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0);
+    }
+    function brl(v) {
+      const n = new Intl.NumberFormat("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(v) || 0);
+      return `<div class="val-brl"><span class="s">R$</span><span class="n">${n}</span></div>`;
+    }
+    function fmtNumPed(v) {
+      const s = String(v || "").trim();
+      if (!s) return "—";
+      return /^\d+$/.test(s) ? s.padStart(6, "0") : s;
     }
     function fmtData(v) {
       if (!v) return "—";
