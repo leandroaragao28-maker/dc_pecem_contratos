@@ -1,3 +1,3 @@
 const CONFIG = {
-  API_URL: "COLAR_URL_DO_APPS_SCRIPT_AQUI",
+  API_URL: "https://script.google.com/macros/s/AKfycbzsuxoP42zsGyvlPLTedEUISDOf7Jty0KBSNDFwDmLXkUe3xfTwFkqkkdj9EQsC6bGRLg/exec",
 };
