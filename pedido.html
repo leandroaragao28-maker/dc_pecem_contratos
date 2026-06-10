@@ -158,6 +158,38 @@
     </div>
   </div>
 
+  <!-- Modal nova medição -->
+  <div class="modal-overlay" id="modal-medicao">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-titulo" id="modal-medicao-titulo">Nova medição</div>
+      <form id="form-medicao" onsubmit="salvarMedicao(event)">
+        <input type="hidden" id="fm-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-grupo">
+            <label>Nº do BM</label>
+            <input type="text" id="fm-num-bm" required placeholder="BM-01" style="font-weight:600;">
+          </div>
+          <div class="form-grupo">
+            <label>Período (MM/AAAA)</label>
+            <input type="text" id="fm-periodo" required placeholder="06/2026" maxlength="7">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Status</label>
+            <select id="fm-status">
+              <option value="em elaboração">Em elaboração</option>
+              <option value="em aprovação">Em aprovação</option>
+              <option value="faturada">Faturada</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModalMedicao()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar-medicao">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <!-- Modal confirmação exclusão item -->
   <div class="modal-overlay" id="modal-excluir-item">
     <div class="modal" style="max-width:380px;text-align:center;">
@@ -252,11 +284,13 @@
           ${renderItens()}
         </div>
 
-        <!-- Tab: Medições (Fase 3) -->
+        <!-- Tab: Medições -->
         <div class="tab-painel" id="tab-medicoes">
-          <div class="estado-msg" style="padding:32px;">
-            Módulo de medições disponível na Fase 3 do desenvolvimento.
+          <div class="flex jc-between ai-center mb-16">
+            <span class="txt-muted" id="resumo-medicoes"></span>
+            <button class="btn btn-primario btn-sm" onclick="abrirModalNovaMedicao()">+ Nova medição</button>
           </div>
+          <div id="lista-medicoes"><div class="estado-msg">Carregando…</div></div>
         </div>
 
         <!-- Tab: Faturamento (Fase 4) -->
@@ -476,6 +510,137 @@
     document.getElementById("modal-excluir-item").addEventListener("click", function(e) {
       if (e.target === this) fecharModalExcluirItem();
     });
+    document.getElementById("modal-medicao").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalMedicao();
+    });
+
+    // ── Medições ───────────────────────────────────────────
+    const BADGES_BM = {
+      "em elaboração": "badge badge-ag",
+      "em aprovação":  "badge badge-em",
+      "faturada":      "badge badge-ok",
+    };
+
+    let medicoesList = [];
+
+    async function carregarMedicoes() {
+      try {
+        const res = await API.medicoes(pedidoId);
+        medicoesList = (res.dados || []).sort((a, b) => String(a.num_bm).localeCompare(String(b.num_bm)));
+        renderMedicoes();
+      } catch (e) {
+        document.getElementById("lista-medicoes").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro: ${e.message}</div>`;
+      }
+    }
+
+    function renderMedicoes() {
+      const el = document.getElementById("lista-medicoes");
+      const resumo = document.getElementById("resumo-medicoes");
+
+      if (!medicoesList.length) {
+        el.innerHTML = `<div class="estado-msg">Nenhuma medição cadastrada. Clique em "+ Nova medição" para começar.</div>`;
+        resumo.textContent = "";
+        return;
+      }
+
+      const totalMedido = medicoesList.reduce((s, m) => s + (Number(m.totalMedido) || 0), 0);
+      resumo.innerHTML = `Total medido: <strong>${fmtBRL(totalMedido)}</strong>`;
+
+      el.innerHTML = `
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:80px;">BM</th>
+                <th style="width:100px;">Período</th>
+                <th>Status</th>
+                <th class="num">Valor medido</th>
+                <th style="width:80px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${medicoesList.map(m => `
+                <tr>
+                  <td><strong>${esc(m.num_bm)}</strong></td>
+                  <td class="txt-muted">${esc(m.periodo)}</td>
+                  <td><span class="${BADGES_BM[m.status] || 'badge'}">${m.status || '—'}</span></td>
+                  <td class="num">${fmtBRL(m.totalMedido)}</td>
+                  <td class="txt-direita">
+                    <a href="medicao.html?id=${m.id}" class="btn btn-secundario btn-sm">Abrir</a>
+                    <button class="btn btn-secundario btn-sm" onclick="editarMedicao(${m.id})" style="margin-left:4px;" title="Editar">✏️</button>
+                  </td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    // Carrega medições quando a aba é aberta
+    const tabBtnOriginal = window.trocarTab;
+    window.trocarTab = function(id, btn) {
+      tabBtnOriginal(id, btn);
+      if (id === "medicoes" && !medicoesList.length) carregarMedicoes();
+    };
+
+    function proximoNumBm() {
+      if (!medicoesList.length) return "BM-01";
+      const nums = medicoesList.map(m => parseInt((m.num_bm || "0").replace(/\D/g, "")) || 0);
+      return "BM-" + String(Math.max(...nums) + 1).padStart(2, "0");
+    }
+
+    function periodoAtual() {
+      const d = new Date();
+      return String(d.getMonth() + 1).padStart(2, "0") + "/" + d.getFullYear();
+    }
+
+    function abrirModalNovaMedicao() {
+      document.getElementById("modal-medicao-titulo").textContent = "Nova medição";
+      document.getElementById("fm-id").value      = "";
+      document.getElementById("fm-num-bm").value  = proximoNumBm();
+      document.getElementById("fm-periodo").value = periodoAtual();
+      document.getElementById("fm-status").value  = "em elaboração";
+      document.getElementById("modal-medicao").classList.add("aberto");
+    }
+
+    function editarMedicao(id) {
+      const m = medicoesList.find(x => String(x.id) === String(id));
+      if (!m) return;
+      document.getElementById("modal-medicao-titulo").textContent = "Editar medição";
+      document.getElementById("fm-id").value      = m.id;
+      document.getElementById("fm-num-bm").value  = m.num_bm;
+      document.getElementById("fm-periodo").value = m.periodo;
+      document.getElementById("fm-status").value  = m.status;
+      document.getElementById("modal-medicao").classList.add("aberto");
+    }
+
+    function fecharModalMedicao() {
+      document.getElementById("modal-medicao").classList.remove("aberto");
+    }
+
+    async function salvarMedicao(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar-medicao");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        const dados = {
+          id:        document.getElementById("fm-id").value || null,
+          pedido_id: pedidoId,
+          num_bm:    document.getElementById("fm-num-bm").value.trim(),
+          periodo:   document.getElementById("fm-periodo").value.trim(),
+          status:    document.getElementById("fm-status").value,
+        };
+        const res = await API.salvarMedicao(dados);
+        fecharModalMedicao();
+        await carregarMedicoes();
+        // Se nova medição, abre diretamente o BM
+        if (!dados.id && res.id) location.href = `medicao.html?id=${res.id}`;
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Salvar";
+      }
+    }
   </script>
 </body>
 </html>

@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medição — DC Pecém</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* Tabela BM — scroll horizontal em telas pequenas */
+    .bm-wrap { overflow-x: auto; }
+    .bm-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; white-space: nowrap; }
+    .bm-table th {
+      background: var(--cor-fundo);
+      padding: 8px 10px;
+      border: 1px solid var(--cor-borda);
+      text-align: center;
+      font-weight: 600;
+      color: var(--cor-texto-m);
+      font-size: 0.78rem;
+    }
+    .bm-table td {
+      padding: 7px 10px;
+      border: 1px solid var(--cor-borda);
+      vertical-align: middle;
+    }
+    .bm-table tr:nth-child(even) td { background: #fafafa; }
+    .bm-table .col-num  { text-align: right; }
+    .bm-table .col-item { font-weight: 600; text-align: center; }
+    .bm-table input[type="number"] {
+      width: 90px;
+      padding: 5px 8px;
+      text-align: right;
+      border: 1px solid var(--cor-borda);
+      border-radius: 4px;
+      font-size: 0.84rem;
+    }
+    .bm-table input[type="number"]:focus {
+      border-color: var(--cor-primaria);
+      outline: none;
+    }
+    .bm-table tfoot td {
+      background: var(--cor-fundo);
+      font-weight: 600;
+      border: 1px solid var(--cor-borda);
+      padding: 8px 10px;
+    }
+    .pct-bar { display: flex; align-items: center; gap: 6px; min-width: 100px; }
+    .pct-bar .barra-wrap { flex: 1; }
+    .pct-bar span { font-size: 0.78rem; color: var(--cor-texto-m); min-width: 36px; text-align: right; }
+
+    /* Grupo de cabeçalho de coluna */
+    .bm-table .grupo { background: var(--cor-primaria); color: white; text-align: center; }
+    .bm-table .grupo-alt { background: #0e7063; color: white; text-align: center; }
+
+    @media print {
+      nav, header .btn, #barra-acoes, .btn { display: none !important; }
+      body { background: white; }
+      .card { border: none; padding: 0; }
+    }
+  </style>
+</head>
+<body class="pagina">
+
+  <header>
+    <div>
+      <div style="font-size:0.78rem;opacity:0.75;margin-bottom:2px;" id="breadcrumb">
+        <a href="pedidos.html" style="color:inherit;text-decoration:none;">Pedidos</a>
+        <span style="margin:0 6px;">›</span>
+        <a id="link-pedido" href="#" style="color:inherit;text-decoration:none;">Pedido</a>
+      </div>
+      <h1 id="titulo-header">Medição</h1>
+    </div>
+    <div class="flex gap-8" id="barra-acoes" style="display:none!important;">
+      <button class="btn" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:white;" onclick="window.print()">🖨️ Imprimir</button>
+      <button class="btn" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:white;" onclick="abrirModalEditar()">Editar BM</button>
+      <button class="btn btn-primario" style="background:white;color:var(--cor-primaria);font-weight:600;" onclick="salvarQuantidades()" id="btn-salvar">Salvar quantidades</button>
+    </div>
+  </header>
+
+  <nav>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="#" onclick="sair(event)">Sair</a>
+  </nav>
+
+  <main id="main-conteudo">
+    <div class="estado-msg">Carregando…</div>
+  </main>
+
+  <!-- Modal editar BM -->
+  <div class="modal-overlay" id="modal-bm">
+    <div class="modal" style="max-width:420px;">
+      <div class="modal-titulo">Editar medição</div>
+      <form id="form-bm" onsubmit="salvarMetadados(event)">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-grupo">
+            <label>Nº do BM</label>
+            <input type="text" id="fb-num-bm" required>
+          </div>
+          <div class="form-grupo">
+            <label>Período (MM/AAAA)</label>
+            <input type="text" id="fb-periodo" required maxlength="7">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Status</label>
+            <select id="fb-status">
+              <option value="em elaboração">Em elaboração</option>
+              <option value="em aprovação">Em aprovação</option>
+              <option value="faturada">Faturada</option>
+            </select>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModalEditar()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar-meta">Salvar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script>
+    if (!estaAutenticado()) location.href = "login.html";
+
+    const params    = new URLSearchParams(location.search);
+    const medicaoId = params.get("id");
+    if (!medicaoId) location.href = "pedidos.html";
+
+    let dadosBM = null;  // { medicao, itens, medicaoItens, acumuladoAnterior }
+
+    const BADGES_BM = {
+      "em elaboração": "badge badge-ag",
+      "em aprovação":  "badge badge-em",
+      "faturada":      "badge badge-ok",
+    };
+
+    // ── Carregamento ───────────────────────────────────────
+    carregarBM();
+
+    async function carregarBM() {
+      try {
+        const res = await API.medicao(medicaoId);
+        dadosBM = res;
+        renderBM();
+      } catch (e) {
+        document.getElementById("main-conteudo").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro ao carregar: ${e.message}</div>`;
+      }
+    }
+
+    // ── Render ─────────────────────────────────────────────
+    function renderBM() {
+      const { medicao, itens, medicaoItens, acumuladoAnterior } = dadosBM;
+
+      document.title = `${medicao.num_bm} — ${medicao.periodo} — DC Pecém`;
+      document.getElementById("titulo-header").innerHTML =
+        `${esc(medicao.num_bm)} &nbsp;<span class="${BADGES_BM[medicao.status] || 'badge'}" style="font-size:0.75rem;vertical-align:middle;">${medicao.status}</span>`;
+      document.getElementById("link-pedido").href    = `pedido.html?id=${medicao.pedido_id}`;
+      document.getElementById("link-pedido").textContent = `Pedido #${medicao.pedido_id}`;
+      document.getElementById("barra-acoes").style.cssText = "";
+
+      // Mapa item_id → qtd_medida neste BM
+      const qtdPeriodo = {};
+      (medicaoItens || []).forEach(mi => { qtdPeriodo[String(mi.item_id)] = Number(mi.qtd_medida) || 0; });
+
+      // Totais rodapé
+      let totContrato = 0, totAnt = 0, totPer = 0, totAtual = 0, totSaldo = 0;
+
+      const linhas = itens.map(item => {
+        const id       = String(item.id);
+        const qtdC     = Number(item.qtd_contratada)  || 0;
+        const pu       = Number(item.preco_unitario)   || 0;
+        const ant      = Number(acumuladoAnterior[id]) || 0;
+        const per      = qtdPeriodo[id] || 0;
+        const atual    = ant + per;
+        const saldo    = qtdC - atual;
+        const pctAtual = qtdC > 0 ? (atual / qtdC) * 100 : 0;
+
+        totContrato += qtdC * pu;
+        totAnt      += ant  * pu;
+        totPer      += per  * pu;
+        totAtual    += atual * pu;
+        totSaldo    += saldo * pu;
+
+        return `
+          <tr data-item-id="${id}">
+            <td class="col-item">${esc(item.num_item)}</td>
+            <td style="white-space:normal;min-width:200px;">${esc(item.descricao)}</td>
+            <td style="text-align:center;">${esc(item.unidade)}</td>
+            <td class="col-num">${fmtNum(qtdC)}</td>
+            <td class="col-num">${fmtBRL(pu)}</td>
+            <td class="col-num">${fmtBRL(qtdC * pu)}</td>
+            <td class="col-num">${fmtNum(ant)}</td>
+            <td class="col-num" style="background:#fef9ec;">
+              <input type="number" class="qtd-periodo" data-item-id="${id}"
+                     data-qtd-contratada="${qtdC}" data-anterior="${ant}" data-pu="${pu}"
+                     value="${per}" min="0" step="0.001" oninput="recalcularLinha(this)">
+            </td>
+            <td class="col-num" id="atual-${id}">${fmtNum(atual)}</td>
+            <td class="col-num" id="saldo-${id}">${fmtNum(saldo)}</td>
+            <td>
+              <div class="pct-bar">
+                <div class="barra-wrap"><div class="barra" id="barra-${id}" style="width:${Math.min(pctAtual,100).toFixed(1)}%"></div></div>
+                <span id="pct-${id}">${pctAtual.toFixed(1)}%</span>
+              </div>
+            </td>
+          </tr>`;
+      }).join("");
+
+      document.getElementById("main-conteudo").innerHTML = `
+        <div class="flex ai-center gap-12 mb-24" style="flex-wrap:wrap;">
+          <div class="txt-muted">Período: <strong>${esc(medicao.periodo)}</strong></div>
+          <div class="txt-muted">Pedido: <strong>#${medicao.pedido_id}</strong></div>
+          <div class="txt-muted">Itens: <strong>${itens.length}</strong></div>
+        </div>
+
+        <div class="card" style="padding:0;">
+          <div class="bm-wrap">
+            <table class="bm-table">
+              <thead>
+                <tr>
+                  <th rowspan="2">Item</th>
+                  <th rowspan="2" style="min-width:200px;white-space:normal;">Descrição</th>
+                  <th rowspan="2">Und.</th>
+                  <th rowspan="2">Qtd.<br>Contrat.</th>
+                  <th rowspan="2">Preço<br>Unit. (R$)</th>
+                  <th rowspan="2">Total<br>Contrato</th>
+                  <th class="grupo" colspan="4">Quantidades</th>
+                  <th rowspan="2" style="min-width:110px;">% Acumulado</th>
+                </tr>
+                <tr>
+                  <th class="grupo">Acum.<br>Anterior</th>
+                  <th class="grupo-alt">Período</th>
+                  <th class="grupo">Acum.<br>Atual</th>
+                  <th class="grupo">Saldo<br>a Medir</th>
+                </tr>
+              </thead>
+              <tbody>${linhas}</tbody>
+              <tfoot>
+                <tr>
+                  <td colspan="5" style="text-align:right;">Totais (R$)</td>
+                  <td class="col-num" id="tot-contrato">${fmtBRL(totContrato)}</td>
+                  <td class="col-num" id="tot-ant">${fmtBRL(totAnt)}</td>
+                  <td class="col-num" id="tot-per" style="background:#fef9ec;">${fmtBRL(totPer)}</td>
+                  <td class="col-num" id="tot-atual">${fmtBRL(totAtual)}</td>
+                  <td class="col-num" id="tot-saldo">${fmtBRL(totSaldo)}</td>
+                  <td></td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+
+        <div class="flex jc-between ai-center" style="margin-top:20px;flex-wrap:wrap;gap:12px;">
+          <div class="flex gap-12" style="flex-wrap:wrap;">
+            <div class="card" style="padding:12px 20px;min-width:160px;">
+              <div class="card-titulo">Valor do período</div>
+              <div class="card-valor" id="card-periodo" style="font-size:1.25rem;">${fmtBRL(totPer)}</div>
+            </div>
+            <div class="card" style="padding:12px 20px;min-width:160px;">
+              <div class="card-titulo">Acumulado total</div>
+              <div class="card-valor" id="card-acumulado" style="font-size:1.25rem;">${fmtBRL(totAtual)}</div>
+            </div>
+            <div class="card" style="padding:12px 20px;min-width:160px;">
+              <div class="card-titulo">Saldo a medir</div>
+              <div class="card-valor" id="card-saldo" style="font-size:1.25rem;">${fmtBRL(totSaldo)}</div>
+            </div>
+          </div>
+          <button class="btn btn-primario" onclick="salvarQuantidades()" style="padding:10px 24px;">Salvar quantidades</button>
+        </div>`;
+    }
+
+    // ── Recalcular linha ao digitar ────────────────────────
+    function recalcularLinha(input) {
+      const id    = input.dataset.itemId;
+      const qtdC  = Number(input.dataset.qtdContratada) || 0;
+      const ant   = Number(input.dataset.anterior)      || 0;
+      const pu    = Number(input.dataset.pu)            || 0;
+      const per   = Number(input.value)                 || 0;
+      const atual = ant + per;
+      const saldo = qtdC - atual;
+      const pct   = qtdC > 0 ? (atual / qtdC) * 100 : 0;
+
+      document.getElementById(`atual-${id}`).textContent = fmtNum(atual);
+      document.getElementById(`saldo-${id}`).textContent = fmtNum(saldo);
+      document.getElementById(`barra-${id}`).style.width = Math.min(pct, 100).toFixed(1) + "%";
+      document.getElementById(`pct-${id}`).textContent   = pct.toFixed(1) + "%";
+
+      atualizarTotais();
+    }
+
+    function atualizarTotais() {
+      let totPer = 0, totAtual = 0, totSaldo = 0;
+      document.querySelectorAll(".qtd-periodo").forEach(input => {
+        const ant  = Number(input.dataset.anterior)      || 0;
+        const pu   = Number(input.dataset.pu)            || 0;
+        const qtdC = Number(input.dataset.qtdContratada) || 0;
+        const per  = Number(input.value)                 || 0;
+        totPer   += per         * pu;
+        totAtual += (ant + per) * pu;
+        totSaldo += (qtdC - ant - per) * pu;
+      });
+
+      const fmt = v => fmtBRL(v);
+      document.getElementById("tot-per").textContent    = fmt(totPer);
+      document.getElementById("tot-atual").textContent  = fmt(totAtual);
+      document.getElementById("tot-saldo").textContent  = fmt(totSaldo);
+      document.getElementById("card-periodo").textContent   = fmt(totPer);
+      document.getElementById("card-acumulado").textContent = fmt(totAtual);
+      document.getElementById("card-saldo").textContent     = fmt(totSaldo);
+    }
+
+    // ── Salvar quantidades ─────────────────────────────────
+    async function salvarQuantidades() {
+      const btn = document.getElementById("btn-salvar");
+      if (btn) { btn.disabled = true; btn.textContent = "Salvando…"; }
+      try {
+        const itens = [];
+        document.querySelectorAll(".qtd-periodo").forEach(input => {
+          itens.push({ item_id: input.dataset.itemId, qtd_medida: Number(input.value) || 0 });
+        });
+        await API.salvarMedicaoItens({ medicao_id: medicaoId, itens });
+        await carregarBM();
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = "Salvar quantidades"; }
+      }
+    }
+
+    // ── Modal editar metadados ─────────────────────────────
+    function abrirModalEditar() {
+      const m = dadosBM.medicao;
+      document.getElementById("fb-num-bm").value  = m.num_bm;
+      document.getElementById("fb-periodo").value = m.periodo;
+      document.getElementById("fb-status").value  = m.status;
+      document.getElementById("modal-bm").classList.add("aberto");
+    }
+
+    function fecharModalEditar() {
+      document.getElementById("modal-bm").classList.remove("aberto");
+    }
+
+    async function salvarMetadados(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar-meta");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        await API.salvarMedicao({
+          id:        medicaoId,
+          pedido_id: dadosBM.medicao.pedido_id,
+          num_bm:    document.getElementById("fb-num-bm").value.trim(),
+          periodo:   document.getElementById("fb-periodo").value.trim(),
+          status:    document.getElementById("fb-status").value,
+        });
+        fecharModalEditar();
+        await carregarBM();
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Salvar";
+      }
+    }
+
+    function sair(e) {
+      e.preventDefault();
+      clearToken();
+      location.href = "login.html";
+    }
+
+    document.getElementById("modal-bm").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalEditar();
+    });
+
+    // ── Utilitários ────────────────────────────────────────
+    function fmtBRL(v) {
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0);
+    }
+    function fmtNum(v) {
+      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 }).format(Number(v) || 0);
+    }
+    function esc(s) {
+      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+  </script>
+</body>
+</html>
