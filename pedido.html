@@ -41,43 +41,42 @@
     .fin-painel {
       display: grid;
       grid-template-columns: 1.5fr 1fr;
-      gap: 32px;
+      gap: 16px;
       border-top: 1px solid var(--cor-borda);
-      margin-top: 16px;
-      padding-top: 20px;
+      margin-top: 10px;
+      padding-top: 12px;
     }
     .fin-titulo {
-      font-size: 0.74rem;
+      font-size: 0.65rem;
       text-transform: uppercase;
-      letter-spacing: 1px;
+      letter-spacing: 0.6px;
       color: var(--cor-texto-m);
       font-weight: 600;
     }
     .fin-destaque {
-      font-size: 1.7rem;
+      font-size: 1.15rem;
       font-weight: 700;
       color: var(--cor-primaria);
-      margin-top: 2px;
-      line-height: 1.1;
+      line-height: 1.2;
     }
     .fin-metrica {
       display: grid;
-      grid-template-columns: minmax(140px, 1fr) 1.4fr 60px;
+      grid-template-columns: minmax(110px, 1fr) 1.4fr 44px;
       align-items: center;
-      gap: 14px;
-      margin-top: 14px;
+      gap: 8px;
+      margin-top: 6px;
     }
     .fin-metrica .mlabel {
-      font-size: 0.7rem;
+      font-size: 0.63rem;
       text-transform: uppercase;
-      letter-spacing: 0.4px;
+      letter-spacing: 0.3px;
       color: var(--cor-texto-m);
     }
-    .fin-metrica .mval { font-size: 0.98rem; font-weight: 600; }
+    .fin-metrica .mval { font-size: 0.82rem; font-weight: 600; }
     .fin-bar-wrap {
       background: var(--cor-borda);
       border-radius: 99px;
-      height: 10px;
+      height: 6px;
       overflow: hidden;
     }
     .fin-bar {
@@ -86,15 +85,18 @@
       border-radius: 99px;
       transition: width .4s ease;
     }
-    .fin-pct { font-size: 0.8rem; color: var(--cor-texto-m); text-align: right; }
+    .fin-pct { font-size: 0.67rem; color: var(--cor-texto-m); text-align: right; }
     .fin-gauge-bloco {
       text-align: center;
       border-left: 1px solid var(--cor-borda);
-      padding-left: 24px;
+      padding-left: 14px;
     }
-    @media (max-width: 760px) {
-      .fin-painel { grid-template-columns: 1fr; }
-      .fin-gauge-bloco { border-left: none; border-top: 1px solid var(--cor-borda); padding-left: 0; padding-top: 16px; }
+    .fin-gauge-bloco .fin-destaque { font-size: 0.95rem; }
+    @media (max-width: 600px) {
+      .fin-painel { grid-template-columns: 1fr; gap: 10px; }
+      .fin-gauge-bloco { border-left: none; border-top: 1px solid var(--cor-borda); padding-left: 0; padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; text-align: left; }
+      .fin-gauge-bloco svg { max-width: 120px !important; margin: 0; }
+      .fin-gauge-bloco .fin-titulo { margin-top: 0; }
     }
   </style>
   <link rel="manifest" href="manifest.json">
@@ -567,13 +569,15 @@
               <div class="fin-titulo">Teto Fat. Direto</div>
               <div class="fin-destaque">${fmtBRL(tetoFatDireto)}</div>
               ${gaugeSVG(pctGauge)}
-              <div style="margin-top:10px;">
-                <div class="fin-titulo" style="font-size:0.68rem;">Valor Faturamento Direto Consumido</div>
-                <div style="font-weight:600;font-size:1rem;">${fmtBRL(fatDiretoConsumido)}</div>
-              </div>
-              <div style="margin-top:10px;">
-                <div class="fin-titulo" style="font-size:0.68rem;">Saldo Faturamento Direto</div>
-                <div style="font-weight:600;font-size:1rem;color:${saldoFatDireto < 0 ? '#dc2626' : 'var(--cor-acento)'};">${fmtBRL(saldoFatDireto)}</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;text-align:left;">
+                <div>
+                  <div class="fin-titulo">Consumido</div>
+                  <div style="font-weight:600;font-size:0.82rem;">${fmtBRL(fatDiretoConsumido)}</div>
+                </div>
+                <div>
+                  <div class="fin-titulo">Saldo</div>
+                  <div style="font-weight:600;font-size:0.82rem;color:${saldoFatDireto < 0 ? '#dc2626' : 'var(--cor-acento)'};">${fmtBRL(saldoFatDireto)}</div>
+                </div>
               </div>
             </div>
           </div>
@@ -702,21 +706,21 @@
     // Medidor semicircular de consumo do teto de fat. direto
     function gaugeSVG(pct) {
       const p   = Math.max(0, Math.min(100, pct)) / 100;
-      const cx = 100, cy = 100, r = 88;
-      const ang = Math.PI - p * Math.PI;            // 0% → 180° (esq.) · 100% → 0° (dir.)
-      const nx  = cx + (r - 14) * Math.cos(ang);
-      const ny  = cy - (r - 14) * Math.sin(ang);
+      const cx = 80, cy = 80, r = 66;
+      const ang = Math.PI - p * Math.PI;
+      const nx  = cx + (r - 10) * Math.cos(ang);
+      const ny  = cy - (r - 10) * Math.sin(ang);
       const over = pct > 100;
       const cor  = over ? "#dc2626" : "var(--cor-acento)";
       return `
-        <svg viewBox="0 0 200 124" width="100%" style="max-width:230px;display:block;margin:6px auto 0;">
+        <svg viewBox="0 0 160 94" width="100%" style="max-width:160px;display:block;margin:4px auto 0;">
           <path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy} Z" fill="#D6E4F7"/>
           <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}"
-                stroke="${cor}" stroke-width="3.5" stroke-linecap="round"/>
-          <circle cx="${cx}" cy="${cy}" r="6" fill="${cor}"/>
-          <text x="${cx - r}" y="${cy + 17}" font-size="11" fill="#6b7280" text-anchor="start">0%</text>
-          <text x="${cx + r}" y="${cy + 17}" font-size="11" fill="#6b7280" text-anchor="end">100%</text>
-          <text x="${cx}" y="${cy - 14}" font-size="20" font-weight="700" fill="${cor}" text-anchor="middle">${pct.toFixed(1)}%</text>
+                stroke="${cor}" stroke-width="3" stroke-linecap="round"/>
+          <circle cx="${cx}" cy="${cy}" r="5" fill="${cor}"/>
+          <text x="${cx - r}" y="${cy + 13}" font-size="9" fill="#6b7280" text-anchor="start">0%</text>
+          <text x="${cx + r}" y="${cy + 13}" font-size="9" fill="#6b7280" text-anchor="end">100%</text>
+          <text x="${cx}" y="${cy - 10}" font-size="16" font-weight="700" fill="${cor}" text-anchor="middle">${pct.toFixed(1)}%</text>
         </svg>`;
     }
 
