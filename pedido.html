@@ -1207,6 +1207,7 @@
     async function carregarFatDireto() {
       document.getElementById("lista-fat-direto").innerHTML = `<div class="estado-msg">Carregando…</div>`;
       try {
+        if (!medicoesList.length) await carregarMedicoes();
         const res = await API.fatDireto(pedidoId);
         fatDiretoList = res.dados || [];
         renderFatDireto();
