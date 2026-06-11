@@ -13,8 +13,9 @@ async function api(acao, params = {}, corpo = null) {
   url.searchParams.set("acao", acao);
   Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
   if (corpo) url.searchParams.set("corpo", JSON.stringify(corpo));
+  url.searchParams.set("_t", Date.now());
 
-  const res  = await fetch(url.toString());
+  const res  = await fetch(url.toString(), { cache: "no-store" });
   const data = await res.json();
 
   if (data.erro === "Token inválido") {
