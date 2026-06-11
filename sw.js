@@ -2,10 +2,10 @@
 // Service Worker — DC Pecém Contratos
 // IMPORTANTE: incremente CACHE_NOME a cada publicação de updates
 //             para que os usuários recebam os novos arquivos.
-// Ex.: 'dc-pecem-v1' → 'dc-pecem-v2'
+// Ex.: 'dc-pecem-v3' → 'dc-pecem-v4'
 // ─────────────────────────────────────────────────────────────
 
-const CACHE_NOME = 'dc-pecem-v2';
+const CACHE_NOME = 'dc-pecem-v3';
 
 const ARQUIVOS_ESTATICOS = [
   'index.html',
@@ -48,7 +48,7 @@ self.addEventListener('activate', e =>
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // API Google Apps Script: sempre via rede (dados em tempo real + auth)
+  // API Google Apps Script: sempre via rede
   if (url.hostname.includes('script.google.com')) return;
 
   // Google Fonts e CDN externos: passa direto para o browser
@@ -56,25 +56,32 @@ self.addEventListener('fetch', e => {
       url.hostname.includes('fonts.gstatic') ||
       url.hostname.includes('cdnjs.cloudflare')) return;
 
-  // Arquivos da mesma origem: cache-first → rede como fallback
-  e.respondWith(
-    caches.match(e.request).then(cached => {
-      if (cached) return cached;
+  // Imagens e ícones: cache-first (raramente mudam)
+  if (/\.(png|jpg|jpeg|svg|ico|woff2?)$/i.test(url.pathname)) {
+    e.respondWith(
+      caches.match(e.request).then(cached => cached || fetch(e.request))
+    );
+    return;
+  }
 
-      return fetch(e.request).then(res => {
-        // Armazena respostas GET bem-sucedidas da mesma origem
+  // HTML, CSS, JS: network-first → cache como fallback offline
+  e.respondWith(
+    fetch(e.request)
+      .then(res => {
         if (res.ok && e.request.method === 'GET' &&
             url.origin === self.location.origin) {
           const copia = res.clone();
           caches.open(CACHE_NOME).then(c => c.put(e.request, copia));
         }
         return res;
-      }).catch(() => {
-        // Sem conexão: retorna shell do app para navegação
-        if (e.request.destination === 'document') {
-          return caches.match('index.html');
-        }
-      });
-    })
+      })
+      .catch(() =>
+        caches.match(e.request).then(cached => {
+          if (cached) return cached;
+          if (e.request.destination === 'document') {
+            return caches.match('index.html');
+          }
+        })
+      )
   );
 });

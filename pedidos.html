@@ -6,27 +6,37 @@
   <title>Pedidos — DC Pecém</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Alinhamento R$ em colunas monetárias */
-    .val-brl { display: flex; justify-content: flex-end; align-items: baseline; gap: 2px; }
-    .val-brl .s { color: var(--cor-texto-m); font-size: 0.67rem; flex-shrink: 0; }
-    .val-brl .n { font-family: 'Courier New', monospace; font-size: 0.72rem; min-width: 14ch; text-align: right; letter-spacing: -0.3px; }
+    /* Barra de resumo */
+    .ped-sumario { display:none; background:#fff; border:1px solid var(--cor-borda); border-radius:var(--raio); padding:10px 0; margin-bottom:12px; overflow-x:auto; }
+    .sum-item { flex:1; min-width:110px; padding:4px 16px; border-right:1px solid var(--cor-borda); }
+    .sum-item:last-child { border-right:none; }
+    .sum-label { font-size:0.65rem; color:var(--cor-texto-m); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:3px; }
+    .sum-val { font-size:0.95rem; font-weight:700; color:var(--cor-primaria); }
 
-    /* Legenda de status */
-    .legenda-status { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; font-size: 0.75rem; color: var(--cor-texto-m); }
-    .legenda-status span { display: flex; align-items: center; gap: 5px; white-space: nowrap; }
-    .legenda-status .dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    /* Barra de filtros */
+    .filtro-bar { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:10px; margin-bottom:12px; }
 
-    /* Nº PED */
-    .num-ped { font-variant-numeric: tabular-nums; letter-spacing: 0.5px; font-size: 0.74rem; }
+    /* Lista de cards */
+    .ped-lista { display:flex; flex-direction:column; gap:8px; }
+    .ped-card { background:#fff; border:1px solid var(--cor-borda); border-radius:var(--raio); padding:12px 16px;
+                display:grid; grid-template-columns:1fr 210px 150px; gap:16px; align-items:center;
+                transition:border-color .15s, box-shadow .15s; }
+    .ped-card:hover { border-color:var(--cor-acento); box-shadow:0 2px 8px rgba(37,99,235,0.1); }
+    .ped-num  { font-size:0.67rem; color:var(--cor-texto-m); margin-bottom:2px; }
+    .ped-desc a { font-size:0.86rem; font-weight:600; color:var(--cor-primaria); text-decoration:none; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; display:block; }
+    .ped-desc a:hover { text-decoration:underline; }
+    .ped-meta { display:flex; align-items:center; gap:8px; font-size:0.69rem; color:var(--cor-texto-m); margin-top:4px; flex-wrap:wrap; }
+    .ped-brow { display:grid; grid-template-columns:58px 1fr 36px; align-items:center; gap:6px; padding:2px 0; }
+    .ped-blbl { font-size:0.63rem; color:var(--cor-texto-m); }
+    .ped-bw   { background:#e8edf2; border-radius:99px; height:5px; overflow:hidden; }
+    .ped-b    { height:100%; background:var(--cor-acento); border-radius:99px; }
+    .ped-bpct { font-size:0.62rem; color:var(--cor-texto-m); text-align:right; }
+    .ped-r    { text-align:right; }
+    .ped-valor { font-size:0.88rem; font-weight:700; color:var(--cor-primaria); margin-bottom:6px; }
+    .ped-acoes { display:flex; gap:4px; justify-content:flex-end; }
 
-    /* Truncar descrição longa com reticências */
-    td.col-descricao { max-width: 0; }
-    td.col-descricao a { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.80rem; }
-
-    /* ID menor */
-    td.col-id { font-size: 0.74rem; }
-
-    @media (max-width: 900px) { .col-exec, .col-med, .col-fat { display: none; } }
+    @media (max-width:860px) { .ped-card { grid-template-columns:1fr auto; } .ped-bars { display:none; } }
+    @media (max-width:480px) { .ped-card { grid-template-columns:1fr; } .ped-r { text-align:left; } .ped-acoes { justify-content:flex-start; } }
   </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1E3A5F">
@@ -58,53 +68,31 @@
   </nav>
 
   <main>
+    <!-- Barra de resumo -->
+    <div id="sumario" class="ped-sumario"></div>
+
     <!-- Filtros -->
-    <div class="flex gap-12 ai-center mb-24" style="flex-wrap:wrap;">
-      <div class="flex gap-8" id="filtros">
+    <div class="filtro-bar">
+      <div class="flex gap-8" style="flex-wrap:wrap;" id="filtros">
         <button class="btn btn-secundario btn-sm filtro ativo" data-status="todos">Todos</button>
         <button class="btn btn-secundario btn-sm filtro" data-status="em negociação">Em negociação</button>
         <button class="btn btn-secundario btn-sm filtro" data-status="aguardando pedido">Aguardando pedido</button>
         <button class="btn btn-secundario btn-sm filtro" data-status="pedido emitido">Pedido emitido</button>
         <button class="btn btn-secundario btn-sm filtro" data-status="concluído">Concluído</button>
       </div>
-      <select id="filtro-responsavel" onchange="renderTabela()"
-              style="font-size:0.8rem;padding:5px 10px;border:1px solid var(--cor-borda);border-radius:var(--raio);background:white;cursor:pointer;height:30px;">
-        <option value="">Todos responsáveis</option>
-      </select>
-      <input type="search" id="busca" placeholder="Buscar por descrição ou Nº PED…"
-             style="width:220px;margin-left:auto;" oninput="renderTabela()">
-    </div>
-
-    <!-- Legenda de status -->
-    <div class="legenda-status mb-16">
-      <span><span class="dot" style="background:var(--cor-status-neg-t);opacity:0.6;"></span>EN = Em negociação</span>
-      <span><span class="dot" style="background:var(--cor-status-ag-t);opacity:0.8;"></span>AP = Aguardando pedido</span>
-      <span><span class="dot" style="background:var(--cor-status-em-t);opacity:0.8;"></span>PE = Pedido emitido</span>
-      <span><span class="dot" style="background:var(--cor-status-ok-t);opacity:0.8;"></span>C = Concluído</span>
-    </div>
-
-    <!-- Tabela -->
-    <div class="card" style="padding:0;overflow:hidden;">
-      <div class="tabela-wrap">
-        <table id="tbl-pedidos">
-          <thead>
-            <tr>
-              <th style="width:48px;">ID</th>
-              <th style="width:80px;">Nº PED</th>
-              <th>Descrição</th>
-              <th class="num" style="width:130px;">R$ PEDIDO</th>
-              <th class="num col-exec" style="width:130px;">R$ EXECUTADO</th>
-              <th class="num col-med"  style="width:130px;">R$ MEDIDO</th>
-              <th class="num col-fat"  style="width:130px;">R$ FATURADO</th>
-              <th style="width:50px;">Status</th>
-              <th style="width:70px;"></th>
-            </tr>
-          </thead>
-          <tbody id="corpo-tabela">
-            <tr><td colspan="9" class="estado-msg">Carregando…</td></tr>
-          </tbody>
-        </table>
+      <div class="flex gap-8 ai-center">
+        <select id="filtro-responsavel" onchange="renderTabela()"
+                style="font-size:0.8rem;padding:5px 10px;border:1px solid var(--cor-borda);border-radius:var(--raio);background:white;cursor:pointer;height:30px;">
+          <option value="">Todos responsáveis</option>
+        </select>
+        <input type="search" id="busca" placeholder="Buscar…"
+               style="width:190px;" oninput="renderTabela()">
       </div>
+    </div>
+
+    <!-- Lista de pedidos -->
+    <div id="lista-pedidos" class="ped-lista">
+      <div class="estado-msg">Carregando…</div>
     </div>
   </main>
 
@@ -228,8 +216,8 @@
         popularFiltroResponsavel();
         renderTabela();
       } catch (e) {
-        document.getElementById("corpo-tabela").innerHTML =
-          `<tr><td colspan="9" class="estado-msg" style="color:#dc2626;">Erro ao carregar: ${e.message}</td></tr>`;
+        document.getElementById("lista-pedidos").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro ao carregar: ${e.message}</div>`;
       }
     }
 
@@ -242,11 +230,14 @@
       if (val) sel.value = val;
     }
 
-    // ── Tabela ─────────────────────────────────────────────
+    // ── Lista de pedidos ───────────────────────────────────
+    const _iUser = `<svg width="11" height="11" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#9ca3af" stroke-width="1.4"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#9ca3af" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+    const _dotC  = {"em negociação":"#f59e0b","aguardando pedido":"#9ca3af","pedido emitido":"var(--cor-acento)","concluído":"#16a34a"};
+
     function renderTabela() {
-      const busca       = (document.getElementById("busca").value || "").toLowerCase();
-      const filtroResp  = document.getElementById("filtro-responsavel").value;
-      const lista  = pedidos.filter(p => {
+      const busca      = (document.getElementById("busca").value || "").toLowerCase();
+      const filtroResp = document.getElementById("filtro-responsavel").value;
+      const lista = pedidos.filter(p => {
         const passaFiltro = filtroAtivo === "todos" || p.status === filtroAtivo;
         const passaResp   = !filtroResp || (p.responsavel || "") === filtroResp;
         const passaBusca  = !busca ||
@@ -256,30 +247,74 @@
         return passaFiltro && passaResp && passaBusca;
       });
 
+      renderSumario(lista);
+
+      const el = document.getElementById("lista-pedidos");
       if (!lista.length) {
-        document.getElementById("corpo-tabela").innerHTML =
-          `<tr><td colspan="9" class="estado-msg">Nenhum pedido encontrado.</td></tr>`;
+        el.innerHTML = `<div class="estado-msg">Nenhum pedido encontrado.</div>`;
         return;
       }
 
-      document.getElementById("corpo-tabela").innerHTML = lista.map(p => `
-        <tr>
-          <td class="col-id"><strong>#${p.id}</strong></td>
-          <td class="txt-muted num-ped">${fmtNumPed(p.num_pedido_sap)}</td>
-          <td class="col-descricao">
-            <a href="pedido.html?id=${p.id}" title="${esc(p.descricao)}" style="color:var(--cor-primaria);text-decoration:none;font-weight:500;">${esc(p.descricao)}</a>
-          </td>
-          <td>${brl(p.valor)}</td>
-          <td class="col-exec">${brl(p.executado)}</td>
-          <td class="col-med">${brl(p.medido)}</td>
-          <td class="col-fat">${brl(p.faturadoBruto)}</td>
-          <td><span class="${BADGES[p.status] || 'badge'}" title="${esc(p.status)}">${STATUS_ABREV[p.status] || p.status || '—'}</span></td>
-          <td class="txt-direita">
-            <button class="btn btn-secundario btn-sm" onclick="abrirModalEditar(${p.id})" title="Editar">✏️</button>
-            <button class="btn btn-secundario btn-sm" onclick="pedirExclusao(${p.id})" title="Excluir" style="margin-left:4px;">🗑️</button>
-          </td>
-        </tr>
-      `).join("");
+      el.innerHTML = lista.map(p => {
+        const base    = num(p.valor);
+        const pctExec = base > 0 ? (num(p.executado)     / base * 100) : 0;
+        const pctMed  = base > 0 ? (num(p.medido)        / base * 100) : 0;
+        const pctFat  = base > 0 ? (num(p.faturadoBruto) / base * 100) : 0;
+        const dotCor  = _dotC[p.status] || "#9ca3af";
+        return `
+          <div class="ped-card">
+            <div>
+              <div class="ped-num">#${p.id}${p.num_pedido_sap ? " · " + fmtNumPed(p.num_pedido_sap) : ""}</div>
+              <div class="ped-desc"><a href="pedido.html?id=${p.id}" title="${esc(p.descricao)}">${esc(p.descricao)}</a></div>
+              <div class="ped-meta">
+                ${p.responsavel ? `${_iUser} <span>${esc(p.responsavel)}</span>` : ""}
+                <span style="display:flex;align-items:center;gap:4px;">
+                  <span style="width:7px;height:7px;border-radius:50%;background:${dotCor};display:inline-block;flex-shrink:0;"></span>
+                  ${p.status || "—"}
+                </span>
+              </div>
+            </div>
+            <div class="ped-bars">
+              ${pedBarRow("Executado", pctExec)}
+              ${pedBarRow("Medido",    pctMed)}
+              ${pedBarRow("Faturado",  pctFat)}
+            </div>
+            <div class="ped-r">
+              <div class="ped-valor">${fmtBRL(p.valor)}</div>
+              <div class="ped-acoes">
+                <button class="btn btn-secundario btn-sm" onclick="abrirModalEditar(${p.id})" title="Editar">✏️</button>
+                <button class="btn btn-secundario btn-sm" onclick="pedirExclusao(${p.id})" title="Excluir">🗑️</button>
+              </div>
+            </div>
+          </div>`;
+      }).join("");
+    }
+
+    function renderSumario(lista) {
+      const el = document.getElementById("sumario");
+      if (!lista.length) { el.style.display = "none"; return; }
+      const totVal  = lista.reduce((s, p) => s + num(p.valor),          0);
+      const totExec = lista.reduce((s, p) => s + num(p.executado),       0);
+      const totMed  = lista.reduce((s, p) => s + num(p.medido),          0);
+      const totFat  = lista.reduce((s, p) => s + num(p.faturadoBruto),   0);
+      el.style.display = "flex";
+      el.innerHTML = `
+        <div class="sum-item"><div class="sum-label">Contratos</div><div class="sum-val">${lista.length}</div></div>
+        <div class="sum-item"><div class="sum-label">Valor total</div><div class="sum-val">${fmtBRL(totVal)}</div></div>
+        <div class="sum-item"><div class="sum-label">Executado</div><div class="sum-val">${fmtBRL(totExec)}</div></div>
+        <div class="sum-item"><div class="sum-label">Medido</div><div class="sum-val">${fmtBRL(totMed)}</div></div>
+        <div class="sum-item"><div class="sum-label">Faturado</div><div class="sum-val">${fmtBRL(totFat)}</div></div>
+      `;
+    }
+
+    function pedBarRow(label, pct) {
+      const w = Math.max(0, Math.min(100, pct));
+      return `
+        <div class="ped-brow">
+          <span class="ped-blbl">${label}</span>
+          <div class="ped-bw"><div class="ped-b" style="width:${w}%"></div></div>
+          <span class="ped-bpct">${pct.toFixed(1)}%</span>
+        </div>`;
     }
 
     // ── Modal novo / editar ────────────────────────────────
@@ -374,6 +409,7 @@
     }
 
     // ── Utilitários ────────────────────────────────────────
+    function num(v) { return parseFloat(v) || 0; }
     function fmtBRL(v) {
       return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0);
     }

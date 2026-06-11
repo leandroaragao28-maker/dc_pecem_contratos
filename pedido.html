@@ -83,6 +83,22 @@
     .escopo-card .et { font-size:0.72rem; font-weight:700; color:var(--cor-primaria); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:4px; }
     .escopo-card .ev { font-size:0.83rem; line-height:1.55; white-space:pre-wrap; }
 
+    /* Tab card wrapper */
+    .tab-card { background:#fff; border:1px solid var(--cor-borda); border-radius:var(--raio); padding:0 20px 20px; }
+    .tab-card .tab-nav { margin-left:-20px; margin-right:-20px; padding:0 20px; }
+
+    /* Icon-only action buttons */
+    .btn-icon { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; padding:0; border-radius:5px; border:1px solid var(--cor-borda); background:transparent; cursor:pointer; color:#6b7280; transition:border-color .15s,color .15s,background .15s; font-family:inherit; }
+    .btn-icon:hover { border-color:var(--cor-acento); color:var(--cor-acento); background:#eff6ff; }
+    .btn-icon.perigo:hover { border-color:#dc2626; color:#dc2626; background:#fef2f2; }
+
+    /* Tab summary info bar */
+    .tab-sumario { display:flex; background:var(--cor-fundo); border:1px solid var(--cor-borda); border-radius:var(--raio); padding:8px 0; margin-bottom:14px; overflow-x:auto; }
+    .ts-item { flex:1; min-width:100px; padding:2px 14px; border-right:1px solid var(--cor-borda); }
+    .ts-item:last-child { border-right:none; }
+    .ts-label { font-size:0.65rem; color:var(--cor-texto-m); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px; }
+    .ts-val { font-size:0.84rem; font-weight:600; color:var(--cor-primaria); }
+
     @media (max-width:700px) {
       .ident-bar { flex-wrap:wrap; }
       .ident-item { min-width:calc(50% - 1px); flex:none; border-bottom:1px solid var(--cor-borda); }
@@ -91,6 +107,10 @@
       .ident-item:last-child { border-bottom:none; }
       .fin-cards { grid-template-columns:1fr; }
       .evo-row { grid-template-columns:60px 100px 1fr 36px; }
+      .tab-sumario { flex-wrap:wrap; }
+      .ts-item { min-width:calc(50% - 1px); flex:none; border-bottom:1px solid var(--cor-borda); }
+      .ts-item:nth-child(2n) { border-right:none; }
+      .ts-item:last-child { border-bottom:none; }
     }
   </style>
   <link rel="manifest" href="manifest.json">
@@ -490,6 +510,10 @@
       "concluído":        "badge badge-ok",
     };
 
+    const iEdit  = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5a1.5 1.5 0 0 1 2.12 2.12l-8.5 8.5L2 14l.88-3.12 8.62-8.38z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const iTrash = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M2 4h12M5 4V2h6v2M6 7v5M10 7v5M3 4l1 10h8l1-10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const iOpen  = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M7 3H3a1.5 1.5 0 0 0-1.5 1.5v8A1.5 1.5 0 0 0 3 14h8a1.5 1.5 0 0 0 1.5-1.5V9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><path d="M9.5 2.5H14v4.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/><line x1="14" y1="2.5" x2="7.5" y2="9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+
     // ── Carregamento ───────────────────────────────────────
     carregarPedido();
 
@@ -647,6 +671,7 @@
         </div>` : ""}
 
         <!-- Tabs -->
+        <div class="tab-card">
         <div class="tab-nav">
           <button class="tab-btn ativo" onclick="trocarTab('itens', this)">Itens do contrato</button>
           <button class="tab-btn" onclick="trocarTab('medicoes', this)">Medições</button>
@@ -681,23 +706,11 @@
         <!-- Tab: Faturamento -->
         <div class="tab-painel" id="tab-faturamento">
           <div id="cards-faturamento" style="display:none;">
-            <div class="grid-cartoes" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px;">
-              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
-                <div class="card-titulo">Faturado bruto</div>
-                <div class="card-valor" id="cf-bruto" style="font-size:1.1rem;">—</div>
-              </div>
-              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
-                <div class="card-titulo">Faturado líquido</div>
-                <div class="card-valor" id="cf-liquido" style="font-size:1.1rem;">—</div>
-              </div>
-              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
-                <div class="card-titulo">Total retido</div>
-                <div class="card-valor" id="cf-retido" style="font-size:1.1rem;">—</div>
-              </div>
-              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
-                <div class="card-titulo">Saldo retido a receber</div>
-                <div class="card-valor" id="cf-saldo-retido" style="font-size:1.1rem;">—</div>
-              </div>
+            <div class="tab-sumario">
+              <div class="ts-item"><div class="ts-label">Faturado bruto</div><div class="ts-val" id="cf-bruto">—</div></div>
+              <div class="ts-item"><div class="ts-label">Faturado líquido</div><div class="ts-val" id="cf-liquido">—</div></div>
+              <div class="ts-item"><div class="ts-label">Total retido</div><div class="ts-val" id="cf-retido">—</div></div>
+              <div class="ts-item"><div class="ts-label">Saldo retido</div><div class="ts-val" id="cf-saldo-retido">—</div></div>
             </div>
           </div>
           <div class="flex jc-between ai-center mb-16">
@@ -712,20 +725,11 @@
 
         <!-- Tab: Fat. Direto -->
         <div class="tab-painel" id="tab-fat-direto">
-          <div id="saldo-fat-direto" style="display:none;margin-bottom:16px;">
-            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
-              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:14px;">
-                <div class="card-titulo">Valor Teto</div>
-                <div class="card-valor" id="fd-teto" style="font-size:1.1rem;">—</div>
-              </div>
-              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:14px;">
-                <div class="card-titulo">Total Consumido</div>
-                <div class="card-valor" id="fd-consumido" style="font-size:1.1rem;">—</div>
-              </div>
-              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:14px;border-left:3px solid var(--cor-acento);">
-                <div class="card-titulo">Saldo Disponível</div>
-                <div class="card-valor" id="fd-saldo" style="font-size:1.1rem;color:var(--cor-acento);">—</div>
-              </div>
+          <div id="saldo-fat-direto" style="display:none;">
+            <div class="tab-sumario">
+              <div class="ts-item"><div class="ts-label">Valor Teto</div><div class="ts-val" id="fd-teto">—</div></div>
+              <div class="ts-item"><div class="ts-label">Total Consumido</div><div class="ts-val" id="fd-consumido">—</div></div>
+              <div class="ts-item"><div class="ts-label">Saldo Disponível</div><div class="ts-val" id="fd-saldo">—</div></div>
             </div>
           </div>
           <div class="flex jc-between ai-center mb-16">
@@ -743,6 +747,7 @@
           </div>
           <div id="lista-apontamentos"><div class="estado-msg">Carregando…</div></div>
         </div>
+        </div><!-- /tab-card -->
       `;
     }
 
@@ -802,8 +807,10 @@
               </div>
             </td>
             <td class="txt-direita">
-              <button class="btn btn-secundario btn-sm" onclick="abrirModalEditarItem(${i.id})" title="Editar">✏️</button>
-              <button class="btn btn-secundario btn-sm" onclick="pedirExclusaoItem(${i.id})" title="Excluir" style="margin-left:4px;">🗑️</button>
+              <div style="display:flex;gap:4px;justify-content:flex-end;">
+                <button class="btn-icon" onclick="abrirModalEditarItem(${i.id})" title="Editar">${iEdit}</button>
+                <button class="btn-icon perigo" onclick="pedirExclusaoItem(${i.id})" title="Excluir">${iTrash}</button>
+              </div>
             </td>
           </tr>`;
       }).join("");
@@ -1070,8 +1077,10 @@
                   <td><span class="${BADGES_BM[m.status] || 'badge'}">${m.status || '—'}</span></td>
                   <td class="num">${fmtBRL(m.totalMedido)}</td>
                   <td class="txt-direita">
-                    <a href="medicao.html?id=${m.id}" class="btn btn-secundario btn-sm">Abrir</a>
-                    <button class="btn btn-secundario btn-sm" onclick="editarMedicao(${m.id})" style="margin-left:4px;" title="Editar">✏️</button>
+                    <div style="display:flex;gap:4px;justify-content:flex-end;">
+                      <a href="medicao.html?id=${m.id}" class="btn-icon" title="Abrir medição">${iOpen}</a>
+                      <button class="btn-icon" onclick="editarMedicao(${m.id})" title="Editar">${iEdit}</button>
+                    </div>
                   </td>
                 </tr>`).join("")}
             </tbody>
@@ -1190,8 +1199,10 @@
           <td class="num" style="color:#dc2626;">${fmtBRL(f.desconto_fat_direto)}</td>
           <td class="num" style="font-weight:600;">${fmtBRL(f.valor_liquido)}</td>
           <td class="txt-direita">
-            <button class="btn btn-secundario btn-sm" onclick="editarFatura(${f.id})" title="Editar">✏️</button>
-            <button class="btn btn-secundario btn-sm" onclick="pedirExclusaoFat(${f.id})" title="Excluir" style="margin-left:4px;">🗑️</button>
+            <div style="display:flex;gap:4px;justify-content:flex-end;">
+              <button class="btn-icon" onclick="editarFatura(${f.id})" title="Editar">${iEdit}</button>
+              <button class="btn-icon perigo" onclick="pedirExclusaoFat(${f.id})" title="Excluir">${iTrash}</button>
+            </div>
           </td>
         </tr>`).join("");
 
@@ -1202,7 +1213,7 @@
           <td class="num" colspan="4" style="color:var(--cor-primaria);font-weight:600;">Devolução: ${fmtBRL(f.valor_bruto)}</td>
           <td></td>
           <td class="txt-direita">
-            <button class="btn btn-secundario btn-sm" onclick="pedirExclusaoFat(${f.id})" title="Excluir">🗑️</button>
+            <button class="btn-icon perigo" onclick="pedirExclusaoFat(${f.id})" title="Excluir">${iTrash}</button>
           </td>
         </tr>`).join("");
 
@@ -1466,8 +1477,10 @@
                   <td class="num" style="font-weight:600;">${fmtBRL(f.valor)}</td>
                   <td class="txt-muted">${esc(f.observacao)}</td>
                   <td class="txt-direita">
-                    <button class="btn btn-secundario btn-sm" onclick="editarFatDireto(${f.id})" title="Editar">✏️</button>
-                    <button class="btn btn-secundario btn-sm" onclick="pedirExclusaoFd(${f.id})" title="Excluir" style="margin-left:4px;">🗑️</button>
+                    <div style="display:flex;gap:4px;justify-content:flex-end;">
+                      <button class="btn-icon" onclick="editarFatDireto(${f.id})" title="Editar">${iEdit}</button>
+                      <button class="btn-icon perigo" onclick="pedirExclusaoFd(${f.id})" title="Excluir">${iTrash}</button>
+                    </div>
                   </td>
                 </tr>`).join("")}
             </tbody>
@@ -1615,7 +1628,7 @@
                   <td class="num">${num(a.perc_avanco) ? a.perc_avanco + "%" : "—"}</td>
                   <td class="txt-muted">${esc(a.observacao)}</td>
                   <td class="txt-direita">
-                    <button class="btn btn-secundario btn-sm" onclick="excluirApontamento(${a.id})" title="Excluir">🗑️</button>
+                    <button class="btn-icon perigo" onclick="excluirApontamento(${a.id})" title="Excluir">${iTrash}</button>
                   </td>
                 </tr>`).join("")}
             </tbody>
