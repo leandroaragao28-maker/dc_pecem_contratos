@@ -439,9 +439,17 @@
 
     async function carregarPedido() {
       try {
-        const res = await API.pedido(pedidoId);
-        pedidoAtual  = res.pedido;
-        itensAtuais  = res.itens || [];
+        const [resPedido, resMed, resFat, resFatDir] = await Promise.all([
+          API.pedido(pedidoId),
+          API.medicoes(pedidoId),
+          API.faturamento(pedidoId),
+          API.fatDireto(pedidoId),
+        ]);
+        pedidoAtual     = resPedido.pedido;
+        itensAtuais     = resPedido.itens || [];
+        medicoesList    = (resMed.dados || []).sort((a, b) => String(a.num_bm).localeCompare(String(b.num_bm)));
+        faturamentoList = resFat.dados    || [];
+        fatDiretoList   = resFatDir.dados || [];
         renderPagina();
       } catch (e) {
         document.getElementById("conteudo").innerHTML =
@@ -455,24 +463,38 @@
       document.title = `#${p.id} ${p.descricao} — DC Pecém`;
       document.getElementById("titulo-header").textContent = `#${p.id} — ${p.descricao}`;
 
-      const totalContratado = itensAtuais.reduce((s, i) =>
+      const totalContratado    = itensAtuais.reduce((s, i) =>
         s + (Number(i.qtd_contratada) * Number(i.preco_unitario)), 0);
-      const totalExecutado  = itensAtuais.reduce((s, i) =>
+      const totalExecutado     = itensAtuais.reduce((s, i) =>
         s + (Number(i.qtd_contratada) * Number(i.preco_unitario) * (Number(i.perc_executado) / 100)), 0);
+      const totalMedido        = medicoesList.reduce((s, m) => s + num(m.totalMedido), 0);
+      const _fatHdr            = faturamentoList.filter(f => f.tipo === "fatura");
+      const _devHdr            = faturamentoList.filter(f => f.tipo === "devolucao_retencao");
+      const totalFaturado      = _fatHdr.reduce((s, f) => s + num(f.valor_bruto), 0);
+      const totalRetidoLiquido = _fatHdr.reduce((s, f) => s + num(f.retencao), 0)
+                               - _devHdr.reduce((s, f) => s + num(f.valor_bruto), 0);
+      const fatDiretoConsumido = fatDiretoList.reduce((s, f) => s + num(f.valor), 0);
 
       document.getElementById("conteudo").innerHTML = `
         <!-- Dados do pedido -->
         <div class="card mb-24">
-          <div class="info-grid">
-            <div class="info-item"><label>Nº SAP</label><span>${esc(p.num_pedido_sap) || "—"}</span></div>
+          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:16px;">
+            <div class="info-item"><label>Nº PED</label><span>${esc(p.num_pedido_sap) || "—"}</span></div>
+            <div class="info-item"><label>Responsável</label><span>${esc(p.responsavel) || "—"}</span></div>
             <div class="info-item"><label>Status</label><span class="${BADGES[p.status] || 'badge'}">${p.status || "—"}</span></div>
-            <div class="info-item"><label>Valor contratado</label><span>${fmtBRL(p.valor)}</span></div>
-            <div class="info-item"><label>% Retenção</label><span>${p.perc_retencao ? p.perc_retencao + "%" : "—"}</span></div>
             <div class="info-item"><label>Data de emissão</label><span>${fmtData(p.data_emissao)}</span></div>
             <div class="info-item"><label>Início</label><span>${fmtData(p.data_inicio)}</span></div>
             <div class="info-item"><label>Término previsto</label><span>${fmtData(p.termino_previsto)}</span></div>
-            ${p.responsavel ? `<div class="info-item"><label>Responsável</label><span>${esc(p.responsavel)}</span></div>` : ""}
-            ${num(p.valor_teto_fat_direto) > 0 ? `<div class="info-item"><label>Teto Fat. Direto</label><span>${fmtBRL(p.valor_teto_fat_direto)}</span></div>` : ""}
+            <div class="info-item"><label>% Retenção</label><span>${p.perc_retencao ? p.perc_retencao + "%" : "—"}</span></div>
+          </div>
+          <div style="border-top:1px solid var(--cor-borda);margin-top:14px;padding-top:14px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:16px;">
+            <div class="info-item"><label>Valor do contrato</label><span>${fmtBRL(p.valor)}</span></div>
+            <div class="info-item"><label>Valor executado</label><span>${fmtBRL(totalExecutado)}</span></div>
+            <div class="info-item"><label>Valor medido</label><span>${fmtBRL(totalMedido)}</span></div>
+            <div class="info-item"><label>Valor faturado</label><span>${fmtBRL(totalFaturado)}</span></div>
+            <div class="info-item"><label>Teto Fat. Direto</label><span>${fmtBRL(p.valor_teto_fat_direto)}</span></div>
+            <div class="info-item"><label>Fat. Direto consumido</label><span>${fmtBRL(fatDiretoConsumido)}</span></div>
+            <div class="info-item"><label>Total retido</label><span>${fmtBRL(totalRetidoLiquido)}</span></div>
           </div>
           ${p.escopo_detalhado ? `
           <div style="margin-top:14px;border-top:1px solid var(--cor-borda);padding-top:12px;">
