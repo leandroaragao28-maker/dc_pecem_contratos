@@ -531,6 +531,11 @@
         faturamentoList = resFat.dados    || [];
         fatDiretoList   = resFatDir.dados || [];
         renderPagina();
+        const tabParam = params.get("tab");
+        if (tabParam) {
+          const tabBtn = document.querySelector(`.tab-btn[onclick*="'${tabParam}'"]`);
+          if (tabBtn) trocarTab(tabParam, tabBtn);
+        }
       } catch (e) {
         document.getElementById("conteudo").innerHTML =
           `<div class="estado-msg" style="color:#dc2626;">Erro ao carregar: ${e.message}</div>`;

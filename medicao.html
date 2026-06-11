@@ -32,21 +32,21 @@
 
     /* ── Table ────────────────────────────────────────────── */
     .bm-wrap { overflow-x:auto; }
-    .bm-table { width:100%; border-collapse:collapse; font-size:0.83rem; white-space:nowrap; }
-    .bm-table th { background:var(--cor-fundo); padding:7px 10px; border:1px solid var(--cor-borda); text-align:center; font-weight:600; color:var(--cor-texto-m); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.3px; }
-    .bm-table td { padding:6px 10px; border:1px solid var(--cor-borda); vertical-align:middle; }
+    .bm-table { width:100%; border-collapse:collapse; font-size:0.76rem; white-space:nowrap; }
+    .bm-table th { background:var(--cor-fundo); padding:5px 7px; border:1px solid var(--cor-borda); text-align:center; font-weight:600; color:var(--cor-texto-m); font-size:0.67rem; text-transform:uppercase; letter-spacing:0.3px; }
+    .bm-table td { padding:4px 7px; border:1px solid var(--cor-borda); vertical-align:middle; }
     .bm-table tr:nth-child(even) td { background:#fafafa; }
     .bm-table tr:hover td { background:#EDF2FA; }
     .bm-table .col-num  { text-align:right; font-variant-numeric:tabular-nums; }
     .bm-table .col-item { font-weight:700; text-align:center; color:var(--cor-primaria); }
     .bm-table .grupo     { background:var(--cor-primaria); color:#fff; text-align:center; }
     .bm-table .grupo-alt { background:#0e7063; color:#fff; text-align:center; }
-    .bm-table tfoot td { background:var(--cor-fundo); font-weight:600; border:1px solid var(--cor-borda); padding:7px 10px; }
-    .bm-table input[type="number"] { width:86px; padding:4px 7px; text-align:right; border:1px solid var(--cor-borda); border-radius:4px; font-size:0.83rem; }
+    .bm-table tfoot td { background:var(--cor-fundo); font-weight:600; border:1px solid var(--cor-borda); padding:5px 7px; }
+    .bm-table input[type="number"] { width:74px; padding:3px 5px; text-align:right; border:1px solid var(--cor-borda); border-radius:4px; font-size:0.76rem; }
     .bm-table input[type="number"]:focus { border-color:var(--cor-primaria); outline:none; }
-    .pct-cell { display:flex; align-items:center; gap:6px; min-width:110px; }
+    .pct-cell { display:flex; align-items:center; gap:5px; min-width:96px; }
     .pct-cell .barra-wrap { flex:1; }
-    .pct-cell span { font-size:0.72rem; color:var(--cor-texto-m); min-width:44px; text-align:right; }
+    .pct-cell span { font-size:0.68rem; color:var(--cor-texto-m); min-width:40px; text-align:right; }
 
     /* ── Pagination ───────────────────────────────────────── */
     .paginacao { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-top:1px solid var(--cor-borda); flex-wrap:wrap; gap:8px; }
@@ -87,6 +87,8 @@
         <a href="pedidos.html" style="color:inherit;text-decoration:none;">Pedidos</a>
         <span style="margin:0 6px;">›</span>
         <a id="link-pedido" href="#" style="color:inherit;text-decoration:none;">Pedido</a>
+        <span style="margin:0 6px;">›</span>
+        <a id="link-medicoes" href="#" style="color:inherit;text-decoration:none;">Medições</a>
       </div>
       <h1 id="titulo-header">Medição</h1>
     </div>
@@ -206,6 +208,7 @@
         `${esc(medicao.num_bm)} &nbsp;<span class="${BADGES_BM[medicao.status] || 'badge'}" style="font-size:0.75rem;vertical-align:middle;">${medicao.status}</span>`;
       document.getElementById("link-pedido").href        = `pedido.html?id=${medicao.pedido_id}`;
       document.getElementById("link-pedido").textContent = `Pedido #${medicao.pedido_id}`;
+      document.getElementById("link-medicoes").href      = `pedido.html?id=${medicao.pedido_id}&tab=medicoes`;
       document.getElementById("barra-acoes").style.cssText = "";
 
       // Calcula totais globais
@@ -271,20 +274,20 @@
             <table class="bm-table">
               <thead>
                 <tr>
-                  <th rowspan="2" style="width:48px;">Item</th>
-                  <th rowspan="2" style="min-width:180px;white-space:normal;text-align:left;">Descrição</th>
-                  <th rowspan="2" style="width:56px;">Und.</th>
-                  <th rowspan="2" style="width:76px;">Qtd.<br>Contrat.</th>
-                  <th rowspan="2" style="width:100px;">Preço<br>Unit. (R$)</th>
-                  <th rowspan="2" style="width:118px;">Total<br>Contrato</th>
+                  <th rowspan="2" style="width:36px;">Item</th>
+                  <th rowspan="2" style="min-width:150px;white-space:normal;text-align:left;">Descrição</th>
+                  <th rowspan="2" style="width:44px;">Und.</th>
+                  <th rowspan="2" style="width:62px;">Qtd.<br>Contrat.</th>
+                  <th rowspan="2" style="width:88px;">Preço<br>Unit. (R$)</th>
+                  <th rowspan="2" style="width:100px;">Total<br>Contrato</th>
                   <th class="grupo" colspan="4">Quantidades</th>
-                  <th rowspan="2" style="min-width:110px;">% Acum.</th>
+                  <th rowspan="2" style="min-width:96px;">% Acum.</th>
                 </tr>
                 <tr>
-                  <th class="grupo" style="width:86px;">Acum.<br>Anterior</th>
-                  <th class="grupo-alt" style="width:94px;">Período</th>
-                  <th class="grupo" style="width:86px;">Acum.<br>Atual</th>
-                  <th class="grupo" style="width:86px;">Saldo<br>a Medir</th>
+                  <th class="grupo" style="width:70px;">Acum.<br>Anterior</th>
+                  <th class="grupo-alt" style="width:82px;">Período</th>
+                  <th class="grupo" style="width:70px;">Acum.<br>Atual</th>
+                  <th class="grupo" style="width:70px;">Saldo<br>a Medir</th>
                 </tr>
               </thead>
               <tbody id="tbody-bm"></tbody>
@@ -329,7 +332,7 @@
         return `
           <tr data-item-id="${id}">
             <td class="col-item">${esc(item.num_item)}</td>
-            <td style="white-space:normal;min-width:180px;">${esc(item.descricao)}</td>
+            <td style="white-space:normal;min-width:150px;">${esc(item.descricao)}</td>
             <td style="text-align:center;color:var(--cor-texto-m);">${esc(item.unidade)}</td>
             <td class="col-num">${fmtNum(qtdC)}</td>
             <td class="col-num">${fmtBRL(pu)}</td>
