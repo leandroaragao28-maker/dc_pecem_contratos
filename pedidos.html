@@ -51,6 +51,8 @@
   <nav>
     <a href="index.html">Dashboard</a>
     <a href="pedidos.html" class="ativo">Pedidos</a>
+    <a href="avanco.html">Avançar</a>
+    <a href="fat-direto.html">Fat. Direto</a>
     <a href="importacao.html">Importar</a>
     <a href="#" onclick="sair(event)">Sair</a>
   </nav>
@@ -65,8 +67,12 @@
         <button class="btn btn-secundario btn-sm filtro" data-status="pedido emitido">Pedido emitido</button>
         <button class="btn btn-secundario btn-sm filtro" data-status="concluído">Concluído</button>
       </div>
+      <select id="filtro-responsavel" onchange="renderTabela()"
+              style="font-size:0.8rem;padding:5px 10px;border:1px solid var(--cor-borda);border-radius:var(--raio);background:white;cursor:pointer;height:30px;">
+        <option value="">Todos responsáveis</option>
+      </select>
       <input type="search" id="busca" placeholder="Buscar por descrição ou Nº PED…"
-             style="width:260px;margin-left:auto;" oninput="renderTabela()">
+             style="width:220px;margin-left:auto;" oninput="renderTabela()">
     </div>
 
     <!-- Legenda de status -->
@@ -146,6 +152,18 @@
             <label>Término previsto</label>
             <input type="date" id="f-termino">
           </div>
+          <div class="form-grupo">
+            <label>Responsável / Gestor</label>
+            <input type="text" id="f-responsavel" placeholder="Ex.: João Silva">
+          </div>
+          <div class="form-grupo">
+            <label>Teto Fat. Direto (R$)</label>
+            <input type="number" id="f-teto-fat-direto" min="0" step="0.01" placeholder="0,00">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Escopo Detalhado</label>
+            <textarea id="f-escopo" rows="3" placeholder="Serviços, fornecimentos ou atividades contemplados…"></textarea>
+          </div>
         </div>
         <div class="modal-acoes">
           <button type="button" class="btn btn-secundario" onclick="fecharModal()">Cancelar</button>
@@ -207,6 +225,7 @@
       try {
         const res = await API.pedidos();
         pedidos = res.dados || [];
+        popularFiltroResponsavel();
         renderTabela();
       } catch (e) {
         document.getElementById("corpo-tabela").innerHTML =
@@ -214,16 +233,27 @@
       }
     }
 
+    function popularFiltroResponsavel() {
+      const resp = [...new Set(pedidos.map(p => p.responsavel).filter(Boolean))].sort();
+      const sel  = document.getElementById("filtro-responsavel");
+      const val  = sel.value;
+      sel.innerHTML = `<option value="">Todos responsáveis</option>` +
+        resp.map(r => `<option value="${esc(r)}">${esc(r)}</option>`).join("");
+      if (val) sel.value = val;
+    }
+
     // ── Tabela ─────────────────────────────────────────────
     function renderTabela() {
-      const busca  = (document.getElementById("busca").value || "").toLowerCase();
+      const busca       = (document.getElementById("busca").value || "").toLowerCase();
+      const filtroResp  = document.getElementById("filtro-responsavel").value;
       const lista  = pedidos.filter(p => {
         const passaFiltro = filtroAtivo === "todos" || p.status === filtroAtivo;
+        const passaResp   = !filtroResp || (p.responsavel || "") === filtroResp;
         const passaBusca  = !busca ||
           (p.descricao || "").toLowerCase().includes(busca) ||
           String(p.num_pedido_sap || "").toLowerCase().includes(busca) ||
           fmtNumPed(p.num_pedido_sap).includes(busca);
-        return passaFiltro && passaBusca;
+        return passaFiltro && passaResp && passaBusca;
       });
 
       if (!lista.length) {
@@ -270,9 +300,12 @@
       document.getElementById("f-valor").value         = p.valor || "";
       document.getElementById("f-retencao").value      = p.perc_retencao || "";
       document.getElementById("f-status").value        = p.status || "em negociação";
-      document.getElementById("f-data-emissao").value  = isoData(p.data_emissao);
-      document.getElementById("f-data-inicio").value   = isoData(p.data_inicio);
-      document.getElementById("f-termino").value       = isoData(p.termino_previsto);
+      document.getElementById("f-data-emissao").value      = isoData(p.data_emissao);
+      document.getElementById("f-data-inicio").value        = isoData(p.data_inicio);
+      document.getElementById("f-termino").value            = isoData(p.termino_previsto);
+      document.getElementById("f-responsavel").value        = p.responsavel || "";
+      document.getElementById("f-teto-fat-direto").value    = p.valor_teto_fat_direto || "";
+      document.getElementById("f-escopo").value             = p.escopo_detalhado || "";
       document.getElementById("modal-pedido").classList.add("aberto");
     }
 
@@ -295,7 +328,10 @@
           status:          document.getElementById("f-status").value,
           data_emissao:    document.getElementById("f-data-emissao").value,
           data_inicio:     document.getElementById("f-data-inicio").value,
-          termino_previsto:document.getElementById("f-termino").value,
+          termino_previsto:      document.getElementById("f-termino").value,
+          responsavel:           document.getElementById("f-responsavel").value,
+          valor_teto_fat_direto: parseFloat(document.getElementById("f-teto-fat-direto").value) || 0,
+          escopo_detalhado:      document.getElementById("f-escopo").value,
         };
         await API.salvarPedido(dados);
         fecharModal();

@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Avanço Físico — DC Pecém</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .ped-card { border-left: 3px solid var(--cor-borda); }
+    .ped-card-header {
+      display: flex; justify-content: space-between; align-items: center;
+      cursor: pointer; padding: 2px 0;
+    }
+    .ped-card-header:hover .ped-titulo { color: var(--cor-acento); }
+    .ped-titulo { font-weight: 600; font-size: 0.92rem; }
+    .ped-meta   { font-size: 0.74rem; color: var(--cor-texto-m); margin-top: 2px; }
+    .toggle-icon { font-size: 1rem; color: var(--cor-texto-m); flex-shrink: 0; transition: transform 0.15s; }
+    .toggle-icon.aberto { transform: rotate(90deg); }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1E3A5F">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DC Pecém">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body class="pagina">
+
+  <header>
+    <div>
+      <div style="font-size:0.78rem;opacity:0.75;margin-bottom:2px;">🏗️ DC Pecém — Contratos</div>
+      <h1>Avanço Físico</h1>
+    </div>
+  </header>
+
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="avanco.html" class="ativo">Avançar</a>
+    <a href="fat-direto.html">Fat. Direto</a>
+    <a href="importacao.html">Importar</a>
+    <a href="#" onclick="sair(event)">Sair</a>
+  </nav>
+
+  <main>
+    <!-- Filtros -->
+    <div class="card mb-16">
+      <div style="display:grid;grid-template-columns:150px 1fr auto;gap:12px;align-items:end;">
+        <div class="form-grupo" style="margin:0;">
+          <label>Data</label>
+          <input type="date" id="data-avanco">
+        </div>
+        <div class="form-grupo" style="margin:0;">
+          <label>Responsável</label>
+          <select id="sel-responsavel">
+            <option value="">— Selecione —</option>
+          </select>
+        </div>
+        <button class="btn btn-primario" onclick="carregarAvanco()">Carregar</button>
+      </div>
+    </div>
+
+    <!-- Pedidos do responsável -->
+    <div id="lista-pedidos-avanco"></div>
+
+    <!-- Apurado do dia -->
+    <div id="secao-apurado" style="display:none;">
+      <div class="card mb-16">
+        <div style="font-size:0.88rem;font-weight:600;color:var(--cor-texto-m);text-transform:uppercase;letter-spacing:0.5px;margin-bottom:14px;">
+          Apurado do Dia
+        </div>
+        <div id="tabela-apurado"></div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal Apontamento -->
+  <div class="modal-overlay" id="modal-ap">
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-titulo">Registrar Apontamento</div>
+      <form id="form-ap" onsubmit="salvarApontamento(event)">
+        <input type="hidden" id="ap-pedido-id">
+        <input type="hidden" id="ap-item-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-grupo">
+            <label>Data</label>
+            <input type="date" id="ap-data" required>
+          </div>
+          <div class="form-grupo">
+            <label>Responsável</label>
+            <input type="text" id="ap-responsavel" required placeholder="Ex.: João Silva">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Item</label>
+            <div id="ap-info" style="font-size:0.88rem;background:var(--cor-fundo);padding:8px;border-radius:var(--raio);color:var(--cor-texto);"></div>
+          </div>
+          <div class="form-grupo">
+            <label>Quantidade executada</label>
+            <input type="number" id="ap-qtd" min="0" step="0.001" placeholder="0,000">
+          </div>
+          <div class="form-grupo">
+            <label>% Avanço</label>
+            <input type="number" id="ap-perc" min="0" max="100" step="0.1" placeholder="0,0">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Observação</label>
+            <textarea id="ap-obs" rows="3" placeholder="Ocorrências, impedimentos, desvios…"></textarea>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModalAp()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar-ap">Registrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script>
+    if (!estaAutenticado()) location.href = "login.html";
+
+    // ── Init ───────────────────────────────────────────────
+    document.getElementById("data-avanco").value = new Date().toISOString().slice(0, 10);
+
+    (async () => {
+      try {
+        const res = await API.responsaveis();
+        const sel = document.getElementById("sel-responsavel");
+        (res.dados || []).forEach(r => {
+          const opt = document.createElement("option");
+          opt.value = r; opt.textContent = r;
+          sel.appendChild(opt);
+        });
+      } catch (e) {
+        console.error("Erro ao carregar responsáveis:", e.message);
+      }
+    })();
+
+    // ── Carregar ───────────────────────────────────────────
+    const itensPorPedido = {};
+
+    async function carregarAvanco() {
+      const responsavel = document.getElementById("sel-responsavel").value;
+      const data        = document.getElementById("data-avanco").value;
+      if (!responsavel) { alert("Selecione um responsável."); return; }
+
+      const el = document.getElementById("lista-pedidos-avanco");
+      el.innerHTML = `<div class="estado-msg">Carregando…</div>`;
+
+      try {
+        const [resPedidos, resApurado] = await Promise.all([
+          API.pedidos(),
+          API.apontamentosData(data),
+        ]);
+
+        const pedidos = (resPedidos.dados || []).filter(p =>
+          String(p.responsavel || "").trim() === responsavel.trim()
+        );
+
+        if (!pedidos.length) {
+          el.innerHTML = `<div class="estado-msg">Nenhum pedido encontrado para <strong>${esc(responsavel)}</strong>.</div>`;
+        } else {
+          el.innerHTML = pedidos.map(p => `
+            <div class="card mb-12 ped-card" id="ped-card-${p.id}">
+              <div class="ped-card-header" onclick="togglePedido(${p.id})">
+                <div>
+                  <div class="ped-titulo">${esc(p.descricao)}</div>
+                  <div class="ped-meta">Pedido #${p.id} · ${esc(p.num_pedido_sap || "—")} · ${fmtBRL(p.valor)}</div>
+                </div>
+                <span class="toggle-icon" id="icon-${p.id}">▶</span>
+              </div>
+              <div id="itens-${p.id}" style="display:none;margin-top:14px;border-top:1px solid var(--cor-borda);padding-top:14px;"></div>
+            </div>`).join("");
+        }
+
+        renderApurado(resApurado.dados || [], data, responsavel);
+
+      } catch (e) {
+        el.innerHTML = `<div class="estado-msg" style="color:#dc2626;">Erro: ${esc(e.message)}</div>`;
+      }
+    }
+
+    async function togglePedido(pedidoId) {
+      const container = document.getElementById(`itens-${pedidoId}`);
+      const icon      = document.getElementById(`icon-${pedidoId}`);
+      const aberto    = container.style.display !== "none";
+
+      container.style.display = aberto ? "none" : "block";
+      icon.classList.toggle("aberto", !aberto);
+      icon.textContent = aberto ? "▶" : "▼";
+
+      if (!aberto && !itensPorPedido[pedidoId]) {
+        container.innerHTML = `<div class="txt-muted" style="font-size:0.84rem;">Carregando itens…</div>`;
+        try {
+          const res = await API.pedido(pedidoId);
+          itensPorPedido[pedidoId] = res.itens || [];
+          renderItensPedido(pedidoId);
+        } catch (e) {
+          container.innerHTML = `<div class="txt-muted" style="color:#dc2626;">Erro: ${esc(e.message)}</div>`;
+        }
+      } else if (!aberto) {
+        renderItensPedido(pedidoId);
+      }
+    }
+
+    function renderItensPedido(pedidoId) {
+      const container = document.getElementById(`itens-${pedidoId}`);
+      const itens     = itensPorPedido[pedidoId] || [];
+
+      if (!itens.length) {
+        container.innerHTML = `<div class="txt-muted" style="font-size:0.84rem;">Nenhum item cadastrado para este pedido.</div>`;
+        return;
+      }
+
+      container.innerHTML = `
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:55px;">Item</th>
+                <th>Descrição</th>
+                <th style="width:55px;">Und.</th>
+                <th class="num" style="width:90px;">Qtd. Cont.</th>
+                <th style="width:80px;">% Exec.</th>
+                <th style="width:80px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${itens.map(i => `
+                <tr>
+                  <td><strong>${esc(i.num_item)}</strong></td>
+                  <td>${esc(i.descricao)}</td>
+                  <td class="txt-muted">${esc(i.unidade)}</td>
+                  <td class="num">${fmtNum(i.qtd_contratada)}</td>
+                  <td>
+                    <div class="flex ai-center gap-6">
+                      <div class="barra-wrap" style="flex:1;">
+                        <div class="barra" style="width:${num(i.perc_executado)}%"></div>
+                      </div>
+                      <span class="txt-muted" style="font-size:0.78rem;min-width:32px;">${num(i.perc_executado)}%</span>
+                    </div>
+                  </td>
+                  <td class="txt-direita">
+                    <button class="btn btn-primario btn-sm"
+                      onclick="abrirModalAp(${pedidoId}, ${i.id}, ${JSON.stringify(esc(i.descricao))}, ${JSON.stringify(esc(i.unidade))})">
+                      Apontar
+                    </button>
+                  </td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    // ── Apurado do dia ─────────────────────────────────────
+    function renderApurado(apontamentos, data, responsavel) {
+      const secao   = document.getElementById("secao-apurado");
+      const tabela  = document.getElementById("tabela-apurado");
+
+      const filtrados = apontamentos.filter(a =>
+        !responsavel || String(a.pedido_responsavel || "").trim() === responsavel.trim()
+      );
+
+      secao.style.display = "";
+
+      if (!filtrados.length) {
+        tabela.innerHTML = `<div class="txt-muted" style="font-size:0.84rem;">Nenhum apontamento registrado em ${fmtData(data)}.</div>`;
+        return;
+      }
+
+      tabela.innerHTML = `
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Pedido</th>
+                <th>Item</th>
+                <th style="width:55px;">Und.</th>
+                <th class="num" style="width:90px;">Qtd.</th>
+                <th class="num" style="width:75px;">% Av.</th>
+                <th>Responsável</th>
+                <th>Observação</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${filtrados.map(a => `
+                <tr>
+                  <td>
+                    <a href="pedido.html?id=${a.pedido_id}" style="color:var(--cor-primaria);text-decoration:none;font-weight:500;">
+                      ${esc(a.pedido_descricao)}
+                    </a>
+                  </td>
+                  <td>${esc(a.item_descricao)}</td>
+                  <td class="txt-muted">${esc(a.item_unidade)}</td>
+                  <td class="num">${num(a.qtd_apontada) ? fmtNum(a.qtd_apontada) : "—"}</td>
+                  <td class="num">${num(a.perc_avanco) ? a.perc_avanco + "%" : "—"}</td>
+                  <td>${esc(a.responsavel)}</td>
+                  <td class="txt-muted">${esc(a.observacao)}</td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    // ── Modal Apontamento ──────────────────────────────────
+    function abrirModalAp(pedidoId, itemId, itemDesc, itemUnidade) {
+      const responsavel = document.getElementById("sel-responsavel").value;
+      const data        = document.getElementById("data-avanco").value;
+
+      document.getElementById("ap-pedido-id").value   = pedidoId;
+      document.getElementById("ap-item-id").value     = itemId;
+      document.getElementById("ap-data").value        = data;
+      document.getElementById("ap-responsavel").value = responsavel;
+      document.getElementById("ap-info").innerHTML    =
+        `<strong>${itemDesc}</strong>${itemUnidade ? " — " + itemUnidade : ""}`;
+      document.getElementById("ap-qtd").value         = "";
+      document.getElementById("ap-perc").value        = "";
+      document.getElementById("ap-obs").value         = "";
+      document.getElementById("modal-ap").classList.add("aberto");
+    }
+
+    function fecharModalAp() {
+      document.getElementById("modal-ap").classList.remove("aberto");
+    }
+
+    async function salvarApontamento(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar-ap");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        const dados = {
+          pedido_id:    document.getElementById("ap-pedido-id").value,
+          item_id:      document.getElementById("ap-item-id").value,
+          data:         document.getElementById("ap-data").value,
+          responsavel:  document.getElementById("ap-responsavel").value,
+          qtd_apontada: parseFloat(document.getElementById("ap-qtd").value)  || 0,
+          perc_avanco:  parseFloat(document.getElementById("ap-perc").value) || 0,
+          observacao:   document.getElementById("ap-obs").value,
+        };
+        await API.saveApontamento(dados);
+        fecharModalAp();
+
+        // Invalida cache de itens do pedido para recarregar % ao reabrir
+        delete itensPorPedido[dados.pedido_id];
+
+        // Atualiza apurado do dia
+        const res = await API.apontamentosData(dados.data);
+        renderApurado(
+          res.dados || [],
+          dados.data,
+          document.getElementById("sel-responsavel").value
+        );
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Registrar";
+      }
+    }
+
+    // ── Sair ───────────────────────────────────────────────
+    function sair(e) {
+      e.preventDefault();
+      clearToken();
+      location.href = "login.html";
+    }
+
+    // ── Utilitários ────────────────────────────────────────
+    function fmtBRL(v) {
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0);
+    }
+    function fmtNum(v) {
+      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 }).format(Number(v) || 0);
+    }
+    function fmtData(v) {
+      if (!v) return "—";
+      const d = new Date(v);
+      return isNaN(d) ? String(v) : d.toLocaleDateString("pt-BR");
+    }
+    function esc(s) {
+      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+    function num(v) { return parseFloat(v) || 0; }
+
+    document.getElementById("modal-ap").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalAp();
+    });
+  </script>
+  <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');</script>
+</body>
+</html>

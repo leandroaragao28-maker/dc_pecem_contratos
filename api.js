@@ -54,4 +54,15 @@ const API = {
   importarItens:        (dados) => api("importarItens",        {}, { dados }),
   importarMedicoes:     (dados) => api("importarMedicoes",     {}, { dados }),
   importarMedicaoItens: (dados) => api("importarMedicaoItens", {}, { dados }),
+
+  fatDireto:         (pedido_id) => api("getFatDireto",       { pedido_id }),
+  allFatDireto:      ()          => api("getAllFatDireto"),
+  saveFatDireto:     (d)         => api("saveFatDireto",       {}, d),
+  deleteFatDireto:   (id)        => api("deleteFatDireto",     { id }),
+
+  apontamentos:      (pedido_id) => api("getApontamentos",     { pedido_id }),
+  saveApontamento:   (d)         => api("saveApontamento",     {}, d),
+  deleteApontamento: (id)        => api("deleteApontamento",   { id }),
+  apontamentosData:  (data)      => api("getApontamentosData", { data }),
+  responsaveis:      ()          => api("getResponsaveis"),
 };

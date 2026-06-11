@@ -63,7 +63,9 @@
 
   <nav>
     <a href="index.html">Dashboard</a>
-    <a href="pedidos.html">Pedidos</a>
+    <a href="pedidos.html" class="ativo">Pedidos</a>
+    <a href="avanco.html">Avançar</a>
+    <a href="fat-direto.html">Fat. Direto</a>
     <a href="importacao.html">Importar</a>
     <a href="#" onclick="sair(event)">Sair</a>
   </nav>
@@ -117,6 +119,18 @@
           <div class="form-grupo">
             <label>Término previsto</label>
             <input type="date" id="f-termino">
+          </div>
+          <div class="form-grupo">
+            <label>Responsável / Gestor</label>
+            <input type="text" id="f-responsavel" placeholder="Ex.: João Silva">
+          </div>
+          <div class="form-grupo">
+            <label>Teto Fat. Direto (R$)</label>
+            <input type="number" id="f-teto-fat-direto" min="0" step="0.01" placeholder="0,00">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Escopo Detalhado</label>
+            <textarea id="f-escopo" rows="3" placeholder="Serviços, fornecimentos ou atividades contemplados…"></textarea>
           </div>
         </div>
         <div class="modal-acoes">
@@ -303,6 +317,97 @@
     </div>
   </div>
 
+  <!-- Modal NF Fat. Direto -->
+  <div class="modal-overlay" id="modal-fat-direto">
+    <div class="modal" style="max-width:480px;">
+      <div class="modal-titulo" id="modal-fd-titulo">Nova NF — Fat. Direto</div>
+      <form id="form-fat-direto" onsubmit="salvarFatDireto(event)">
+        <input type="hidden" id="fd-nf-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-grupo">
+            <label>Nº da Nota Fiscal <span style="color:#dc2626;">*</span></label>
+            <input type="text" id="fd-num-nf" required placeholder="Ex.: 000123">
+          </div>
+          <div class="form-grupo">
+            <label>Data de emissão <span style="color:#dc2626;">*</span></label>
+            <input type="date" id="fd-data-emissao" required>
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Fornecedor / Emitente <span style="color:#dc2626;">*</span></label>
+            <input type="text" id="fd-fornecedor" required placeholder="Razão social ou nome fantasia">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Valor da NF (R$) <span style="color:#dc2626;">*</span></label>
+            <input type="number" id="fd-valor" min="0" step="0.01" required placeholder="0,00">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Observação</label>
+            <textarea id="fd-observacao" rows="2" placeholder="Observação opcional…"></textarea>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModalFatDireto()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar-fd">Salvar NF</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal confirmação excluir NF Fat. Direto -->
+  <div class="modal-overlay" id="modal-excluir-fd">
+    <div class="modal" style="max-width:380px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:12px;">⚠️</div>
+      <div class="modal-titulo">Excluir NF de faturamento direto?</div>
+      <p class="txt-muted">Esta ação não pode ser desfeita.</p>
+      <div class="modal-acoes" style="justify-content:center;margin-top:20px;">
+        <button class="btn btn-secundario" onclick="fecharModalExcluirFd()">Cancelar</button>
+        <button class="btn btn-perigo" onclick="confirmarExclusaoFd()">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Apontamento de Produção -->
+  <div class="modal-overlay" id="modal-apontamento">
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-titulo" id="modal-ap-titulo">Registrar Apontamento</div>
+      <form id="form-apontamento" onsubmit="salvarApontamentoModal(event)">
+        <input type="hidden" id="ap-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-grupo">
+            <label>Data <span style="color:#dc2626;">*</span></label>
+            <input type="date" id="ap-data" required>
+          </div>
+          <div class="form-grupo">
+            <label>Responsável <span style="color:#dc2626;">*</span></label>
+            <input type="text" id="ap-responsavel" required placeholder="Ex.: João Silva">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Item / Atividade <span style="color:#dc2626;">*</span></label>
+            <select id="ap-item-id" required>
+              <option value="">— Selecione o item —</option>
+            </select>
+          </div>
+          <div class="form-grupo">
+            <label>Quantidade executada</label>
+            <input type="number" id="ap-qtd" min="0" step="0.001" placeholder="0,000">
+          </div>
+          <div class="form-grupo">
+            <label>% Avanço</label>
+            <input type="number" id="ap-perc" min="0" max="100" step="0.1" placeholder="0,0">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Observação</label>
+            <textarea id="ap-obs" rows="3" placeholder="Ocorrências, impedimentos, desvios…"></textarea>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModalApontamento()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar-ap">Registrar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
   <script src="config.js"></script>
   <script src="api.js"></script>
   <script>
@@ -360,7 +465,14 @@
             <div class="info-item"><label>Data de emissão</label><span>${fmtData(p.data_emissao)}</span></div>
             <div class="info-item"><label>Início</label><span>${fmtData(p.data_inicio)}</span></div>
             <div class="info-item"><label>Término previsto</label><span>${fmtData(p.termino_previsto)}</span></div>
+            ${p.responsavel ? `<div class="info-item"><label>Responsável</label><span>${esc(p.responsavel)}</span></div>` : ""}
+            ${num(p.valor_teto_fat_direto) > 0 ? `<div class="info-item"><label>Teto Fat. Direto</label><span>${fmtBRL(p.valor_teto_fat_direto)}</span></div>` : ""}
           </div>
+          ${p.escopo_detalhado ? `
+          <div style="margin-top:14px;border-top:1px solid var(--cor-borda);padding-top:12px;">
+            <div style="font-size:0.74rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--cor-texto-m);font-weight:600;margin-bottom:6px;">Escopo Detalhado</div>
+            <div style="font-size:0.86rem;white-space:pre-wrap;line-height:1.6;">${esc(p.escopo_detalhado)}</div>
+          </div>` : ""}
         </div>
 
         <!-- Tabs -->
@@ -368,6 +480,8 @@
           <button class="tab-btn ativo" onclick="trocarTab('itens', this)">Itens do contrato</button>
           <button class="tab-btn" onclick="trocarTab('medicoes', this)">Medições</button>
           <button class="tab-btn" onclick="trocarTab('faturamento', this)">Faturamento</button>
+          <button class="tab-btn" onclick="trocarTab('fat-direto', this)">Fat. Direto</button>
+          <button class="tab-btn" onclick="trocarTab('apontamentos', this)">Apontamentos</button>
         </div>
 
         <!-- Tab: Itens -->
@@ -397,19 +511,19 @@
         <div class="tab-painel" id="tab-faturamento">
           <div id="cards-faturamento" style="display:none;">
             <div class="grid-cartoes" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:20px;">
-              <div style="background:var(--cor-background-secondary,#f0f2f5);border-radius:var(--raio);padding:1rem;">
+              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
                 <div class="card-titulo">Faturado bruto</div>
                 <div class="card-valor" id="cf-bruto" style="font-size:1.1rem;">—</div>
               </div>
-              <div style="background:var(--cor-background-secondary,#f0f2f5);border-radius:var(--raio);padding:1rem;">
+              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
                 <div class="card-titulo">Faturado líquido</div>
                 <div class="card-valor" id="cf-liquido" style="font-size:1.1rem;">—</div>
               </div>
-              <div style="background:var(--cor-background-secondary,#f0f2f5);border-radius:var(--raio);padding:1rem;">
+              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
                 <div class="card-titulo">Total retido</div>
                 <div class="card-valor" id="cf-retido" style="font-size:1.1rem;">—</div>
               </div>
-              <div style="background:var(--cor-background-secondary,#f0f2f5);border-radius:var(--raio);padding:1rem;">
+              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:1rem;">
                 <div class="card-titulo">Saldo retido a receber</div>
                 <div class="card-valor" id="cf-saldo-retido" style="font-size:1.1rem;">—</div>
               </div>
@@ -423,6 +537,40 @@
             </div>
           </div>
           <div id="lista-faturamento"><div class="estado-msg">Carregando…</div></div>
+        </div>
+
+        <!-- Tab: Fat. Direto -->
+        <div class="tab-painel" id="tab-fat-direto">
+          <div id="saldo-fat-direto" style="display:none;margin-bottom:16px;">
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:14px;">
+                <div class="card-titulo">Valor Teto</div>
+                <div class="card-valor" id="fd-teto" style="font-size:1.1rem;">—</div>
+              </div>
+              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:14px;">
+                <div class="card-titulo">Total Consumido</div>
+                <div class="card-valor" id="fd-consumido" style="font-size:1.1rem;">—</div>
+              </div>
+              <div style="background:var(--cor-fundo);border-radius:var(--raio);padding:14px;border-left:3px solid var(--cor-acento);">
+                <div class="card-titulo">Saldo Disponível</div>
+                <div class="card-valor" id="fd-saldo" style="font-size:1.1rem;color:var(--cor-acento);">—</div>
+              </div>
+            </div>
+          </div>
+          <div class="flex jc-between ai-center mb-16">
+            <span class="txt-muted" id="resumo-fat-direto"></span>
+            <button class="btn btn-primario btn-sm" onclick="abrirModalFatDireto()">+ Nova NF</button>
+          </div>
+          <div id="lista-fat-direto"><div class="estado-msg">Carregando…</div></div>
+        </div>
+
+        <!-- Tab: Apontamentos -->
+        <div class="tab-painel" id="tab-apontamentos">
+          <div class="flex jc-between ai-center mb-16">
+            <span class="txt-muted" id="resumo-apontamentos"></span>
+            <button class="btn btn-primario btn-sm" onclick="abrirModalApontamento()">+ Registrar apontamento</button>
+          </div>
+          <div id="lista-apontamentos"><div class="estado-msg">Carregando…</div></div>
         </div>
       `;
     }
@@ -490,9 +638,12 @@
       document.getElementById("f-valor").value         = p.valor || "";
       document.getElementById("f-retencao").value      = p.perc_retencao || "";
       document.getElementById("f-status").value        = p.status || "em negociação";
-      document.getElementById("f-data-emissao").value  = isoData(p.data_emissao);
-      document.getElementById("f-data-inicio").value   = isoData(p.data_inicio);
-      document.getElementById("f-termino").value       = isoData(p.termino_previsto);
+      document.getElementById("f-data-emissao").value      = isoData(p.data_emissao);
+      document.getElementById("f-data-inicio").value        = isoData(p.data_inicio);
+      document.getElementById("f-termino").value            = isoData(p.termino_previsto);
+      document.getElementById("f-responsavel").value        = p.responsavel || "";
+      document.getElementById("f-teto-fat-direto").value    = p.valor_teto_fat_direto || "";
+      document.getElementById("f-escopo").value             = p.escopo_detalhado || "";
       document.getElementById("modal-pedido").classList.add("aberto");
     }
 
@@ -514,7 +665,10 @@
           status:           document.getElementById("f-status").value,
           data_emissao:     document.getElementById("f-data-emissao").value,
           data_inicio:      document.getElementById("f-data-inicio").value,
-          termino_previsto: document.getElementById("f-termino").value,
+          termino_previsto:      document.getElementById("f-termino").value,
+          responsavel:           document.getElementById("f-responsavel").value,
+          valor_teto_fat_direto: parseFloat(document.getElementById("f-teto-fat-direto").value) || 0,
+          escopo_detalhado:      document.getElementById("f-escopo").value,
         };
         await API.salvarPedido(dados);
         fecharModalPedido();
@@ -647,6 +801,15 @@
     document.getElementById("modal-excluir-fat").addEventListener("click", function(e) {
       if (e.target === this) fecharModalExcluirFat();
     });
+    document.getElementById("modal-fat-direto").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalFatDireto();
+    });
+    document.getElementById("modal-excluir-fd").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalExcluirFd();
+    });
+    document.getElementById("modal-apontamento").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalApontamento();
+    });
 
     // ── Medições ───────────────────────────────────────────
     const BADGES_BM = {
@@ -714,8 +877,10 @@
     const tabBtnOriginal = window.trocarTab;
     window.trocarTab = function(id, btn) {
       tabBtnOriginal(id, btn);
-      if (id === "medicoes"    && !medicoesList.length)     carregarMedicoes();
-      if (id === "faturamento")                             carregarFaturamento();
+      if (id === "medicoes"    && !medicoesList.length) carregarMedicoes();
+      if (id === "faturamento")                         carregarFaturamento();
+      if (id === "fat-direto")                          carregarFatDireto();
+      if (id === "apontamentos")                        carregarApontamentos();
     };
 
     function proximoNumBm() {
@@ -1020,6 +1185,268 @@
     }
 
     function num(v) { return parseFloat(v) || 0; }
+
+    // ── Fat. Direto ────────────────────────────────────────
+    let fatDiretoList = [];
+    let idExcluirFd   = null;
+
+    async function carregarFatDireto() {
+      document.getElementById("lista-fat-direto").innerHTML = `<div class="estado-msg">Carregando…</div>`;
+      try {
+        const res = await API.fatDireto(pedidoId);
+        fatDiretoList = res.dados || [];
+        renderFatDireto();
+      } catch (e) {
+        document.getElementById("lista-fat-direto").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro: ${e.message}</div>`;
+      }
+    }
+
+    function renderFatDireto() {
+      const teto      = num(pedidoAtual.valor_teto_fat_direto);
+      const consumido = fatDiretoList.reduce((s, f) => s + num(f.valor), 0);
+      const saldo     = teto - consumido;
+
+      const saldoEl = document.getElementById("saldo-fat-direto");
+      if (teto > 0 || consumido > 0) {
+        saldoEl.style.display = "";
+        document.getElementById("fd-teto").textContent      = fmtBRL(teto);
+        document.getElementById("fd-consumido").textContent = fmtBRL(consumido);
+        document.getElementById("fd-saldo").textContent     = fmtBRL(saldo);
+        document.getElementById("fd-saldo").style.color     = saldo < 0 ? "#dc2626" : "var(--cor-acento)";
+      } else {
+        saldoEl.style.display = "none";
+      }
+
+      document.getElementById("resumo-fat-direto").textContent =
+        `${fatDiretoList.length} NF(s) · ${fmtBRL(consumido)} consumido`;
+
+      const el = document.getElementById("lista-fat-direto");
+      if (!fatDiretoList.length) {
+        el.innerHTML = `<div class="estado-msg">Nenhuma NF lançada. Clique em "+ Nova NF" para começar.</div>`;
+        return;
+      }
+
+      el.innerHTML = `
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nº NF</th>
+                <th style="width:100px;">Data</th>
+                <th>Fornecedor</th>
+                <th class="num" style="width:130px;">Valor (R$)</th>
+                <th>Observação</th>
+                <th style="width:75px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${fatDiretoList.map(f => `
+                <tr>
+                  <td><strong>${esc(f.num_nf)}</strong></td>
+                  <td class="txt-muted">${fmtData(f.data_emissao)}</td>
+                  <td>${esc(f.fornecedor)}</td>
+                  <td class="num" style="font-weight:600;">${fmtBRL(f.valor)}</td>
+                  <td class="txt-muted">${esc(f.observacao)}</td>
+                  <td class="txt-direita">
+                    <button class="btn btn-secundario btn-sm" onclick="editarFatDireto(${f.id})" title="Editar">✏️</button>
+                    <button class="btn btn-secundario btn-sm" onclick="pedirExclusaoFd(${f.id})" title="Excluir" style="margin-left:4px;">🗑️</button>
+                  </td>
+                </tr>`).join("")}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td colspan="3" style="text-align:right;font-weight:600;">Total consumido</td>
+                <td class="num" style="font-weight:600;">${fmtBRL(consumido)}</td>
+                <td colspan="2"></td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>`;
+    }
+
+    function abrirModalFatDireto() {
+      document.getElementById("modal-fd-titulo").textContent = "Nova NF — Fat. Direto";
+      document.getElementById("fd-nf-id").value         = "";
+      document.getElementById("fd-num-nf").value         = "";
+      document.getElementById("fd-data-emissao").value   = new Date().toISOString().slice(0, 10);
+      document.getElementById("fd-fornecedor").value     = "";
+      document.getElementById("fd-valor").value          = "";
+      document.getElementById("fd-observacao").value     = "";
+      document.getElementById("modal-fat-direto").classList.add("aberto");
+    }
+
+    function editarFatDireto(id) {
+      const f = fatDiretoList.find(x => String(x.id) === String(id));
+      if (!f) return;
+      document.getElementById("modal-fd-titulo").textContent = "Editar NF";
+      document.getElementById("fd-nf-id").value         = f.id;
+      document.getElementById("fd-num-nf").value         = f.num_nf || "";
+      document.getElementById("fd-data-emissao").value   = isoData(f.data_emissao);
+      document.getElementById("fd-fornecedor").value     = f.fornecedor || "";
+      document.getElementById("fd-valor").value          = f.valor || 0;
+      document.getElementById("fd-observacao").value     = f.observacao || "";
+      document.getElementById("modal-fat-direto").classList.add("aberto");
+    }
+
+    function fecharModalFatDireto() {
+      document.getElementById("modal-fat-direto").classList.remove("aberto");
+    }
+
+    async function salvarFatDireto(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar-fd");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        const dados = {
+          id:           document.getElementById("fd-nf-id").value || null,
+          pedido_id:    pedidoId,
+          num_nf:       document.getElementById("fd-num-nf").value,
+          data_emissao: document.getElementById("fd-data-emissao").value,
+          fornecedor:   document.getElementById("fd-fornecedor").value,
+          valor:        parseFloat(document.getElementById("fd-valor").value) || 0,
+          observacao:   document.getElementById("fd-observacao").value,
+        };
+        await API.saveFatDireto(dados);
+        fecharModalFatDireto();
+        await carregarFatDireto();
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Salvar NF";
+      }
+    }
+
+    function pedirExclusaoFd(id) {
+      idExcluirFd = id;
+      document.getElementById("modal-excluir-fd").classList.add("aberto");
+    }
+    function fecharModalExcluirFd() {
+      idExcluirFd = null;
+      document.getElementById("modal-excluir-fd").classList.remove("aberto");
+    }
+    async function confirmarExclusaoFd() {
+      if (!idExcluirFd) return;
+      try {
+        await API.deleteFatDireto(idExcluirFd);
+        fecharModalExcluirFd();
+        await carregarFatDireto();
+      } catch (err) {
+        alert("Erro ao excluir: " + err.message);
+      }
+    }
+
+    // ── Apontamentos de Produção ───────────────────────────
+    let apontamentosList = [];
+
+    async function carregarApontamentos() {
+      document.getElementById("lista-apontamentos").innerHTML = `<div class="estado-msg">Carregando…</div>`;
+      try {
+        const res = await API.apontamentos(pedidoId);
+        apontamentosList = (res.dados || []).sort((a, b) => String(b.data).localeCompare(String(a.data)));
+        renderApontamentos();
+      } catch (e) {
+        document.getElementById("lista-apontamentos").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro: ${e.message}</div>`;
+      }
+    }
+
+    function renderApontamentos() {
+      document.getElementById("resumo-apontamentos").textContent =
+        `${apontamentosList.length} apontamento(s)`;
+      const el = document.getElementById("lista-apontamentos");
+      if (!apontamentosList.length) {
+        el.innerHTML = `<div class="estado-msg">Nenhum apontamento registrado. Clique em "+ Registrar apontamento".</div>`;
+        return;
+      }
+      el.innerHTML = `
+        <div class="tabela-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th style="width:100px;">Data</th>
+                <th>Responsável</th>
+                <th>Item</th>
+                <th style="width:60px;">Und.</th>
+                <th class="num" style="width:90px;">Qtd.</th>
+                <th class="num" style="width:80px;">% Av.</th>
+                <th>Observação</th>
+                <th style="width:50px;"></th>
+              </tr>
+            </thead>
+            <tbody>
+              ${apontamentosList.map(a => `
+                <tr>
+                  <td class="txt-muted">${fmtData(a.data)}</td>
+                  <td>${esc(a.responsavel)}</td>
+                  <td>${esc(a.item_descricao)}</td>
+                  <td class="txt-muted">${esc(a.item_unidade)}</td>
+                  <td class="num">${num(a.qtd_apontada) ? fmtNum(a.qtd_apontada) : "—"}</td>
+                  <td class="num">${num(a.perc_avanco) ? a.perc_avanco + "%" : "—"}</td>
+                  <td class="txt-muted">${esc(a.observacao)}</td>
+                  <td class="txt-direita">
+                    <button class="btn btn-secundario btn-sm" onclick="excluirApontamento(${a.id})" title="Excluir">🗑️</button>
+                  </td>
+                </tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function abrirModalApontamento() {
+      const sel = document.getElementById("ap-item-id");
+      sel.innerHTML = `<option value="">— Selecione o item —</option>` +
+        itensAtuais.map(i =>
+          `<option value="${i.id}">${esc(i.num_item)} — ${esc(i.descricao)} (${esc(i.unidade)})</option>`
+        ).join("");
+      document.getElementById("ap-id").value         = "";
+      document.getElementById("ap-data").value       = new Date().toISOString().slice(0, 10);
+      document.getElementById("ap-responsavel").value = pedidoAtual.responsavel || "";
+      document.getElementById("ap-qtd").value        = "";
+      document.getElementById("ap-perc").value       = "";
+      document.getElementById("ap-obs").value        = "";
+      document.getElementById("modal-ap-titulo").textContent = "Registrar Apontamento";
+      document.getElementById("modal-apontamento").classList.add("aberto");
+    }
+
+    function fecharModalApontamento() {
+      document.getElementById("modal-apontamento").classList.remove("aberto");
+    }
+
+    async function salvarApontamentoModal(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar-ap");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        const dados = {
+          id:           document.getElementById("ap-id").value || null,
+          pedido_id:    pedidoId,
+          item_id:      document.getElementById("ap-item-id").value,
+          data:         document.getElementById("ap-data").value,
+          responsavel:  document.getElementById("ap-responsavel").value,
+          qtd_apontada: parseFloat(document.getElementById("ap-qtd").value)  || 0,
+          perc_avanco:  parseFloat(document.getElementById("ap-perc").value) || 0,
+          observacao:   document.getElementById("ap-obs").value,
+        };
+        await API.saveApontamento(dados);
+        fecharModalApontamento();
+        await carregarApontamentos();
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Registrar";
+      }
+    }
+
+    async function excluirApontamento(id) {
+      if (!confirm("Excluir este apontamento?")) return;
+      try {
+        await API.deleteApontamento(id);
+        await carregarApontamentos();
+      } catch (err) {
+        alert("Erro ao excluir: " + err.message);
+      }
+    }
 
     async function salvarMedicao(e) {
       e.preventDefault();

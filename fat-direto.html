@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Faturamento Direto — DC Pecém</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#1E3A5F">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="DC Pecém">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+</head>
+<body class="pagina">
+
+  <header>
+    <div>
+      <div style="font-size:0.78rem;opacity:0.75;margin-bottom:2px;">🏗️ DC Pecém — Contratos</div>
+      <h1>Faturamento Direto</h1>
+    </div>
+    <button class="btn btn-primario" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);" onclick="abrirModalNovaNF()">
+      + Nova NF
+    </button>
+  </header>
+
+  <nav>
+    <a href="index.html">Dashboard</a>
+    <a href="pedidos.html">Pedidos</a>
+    <a href="avanco.html">Avançar</a>
+    <a href="fat-direto.html" class="ativo">Fat. Direto</a>
+    <a href="importacao.html">Importar</a>
+    <a href="#" onclick="sair(event)">Sair</a>
+  </nav>
+
+  <main>
+    <!-- Cards de resumo -->
+    <div class="grid-cartoes mb-24" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));">
+      <div class="cartao">
+        <div class="cartao-titulo">Total de NFs</div>
+        <div class="cartao-valor" id="card-qtd">—</div>
+      </div>
+      <div class="cartao">
+        <div class="cartao-titulo">Total consumido</div>
+        <div class="cartao-valor" id="card-total">—</div>
+      </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="flex gap-12 ai-center mb-16" style="flex-wrap:wrap;">
+      <select id="filtro-pedido" onchange="renderTabela()"
+              style="font-size:0.8rem;padding:5px 10px;border:1px solid var(--cor-borda);border-radius:var(--raio);background:white;cursor:pointer;height:30px;min-width:240px;">
+        <option value="">Todos os pedidos</option>
+      </select>
+      <input type="search" id="busca" placeholder="Buscar por NF ou fornecedor…"
+             style="width:220px;margin-left:auto;" oninput="renderTabela()">
+    </div>
+
+    <!-- Tabela -->
+    <div class="card" style="padding:0;overflow:hidden;">
+      <div class="tabela-wrap">
+        <table id="tbl-fat-direto">
+          <thead>
+            <tr>
+              <th>Pedido</th>
+              <th style="width:90px;">Nº NF</th>
+              <th style="width:100px;">Data</th>
+              <th>Fornecedor</th>
+              <th class="num" style="width:130px;">Valor (R$)</th>
+              <th>Observação</th>
+              <th style="width:75px;"></th>
+            </tr>
+          </thead>
+          <tbody id="corpo-tabela">
+            <tr><td colspan="7" class="estado-msg">Carregando…</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </main>
+
+  <!-- Modal NF -->
+  <div class="modal-overlay" id="modal-nf">
+    <div class="modal" style="max-width:500px;">
+      <div class="modal-titulo" id="modal-nf-titulo">Nova NF — Fat. Direto</div>
+      <form id="form-nf" onsubmit="salvarNF(event)">
+        <input type="hidden" id="f-id">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Pedido <span style="color:#dc2626;">*</span></label>
+            <select id="f-pedido-id" required>
+              <option value="">— Selecione o pedido —</option>
+            </select>
+          </div>
+          <div class="form-grupo">
+            <label>Nº da Nota Fiscal <span style="color:#dc2626;">*</span></label>
+            <input type="text" id="f-num-nf" required placeholder="Ex.: 000123">
+          </div>
+          <div class="form-grupo">
+            <label>Data de emissão <span style="color:#dc2626;">*</span></label>
+            <input type="date" id="f-data-emissao" required>
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Fornecedor / Emitente <span style="color:#dc2626;">*</span></label>
+            <input type="text" id="f-fornecedor" required placeholder="Razão social ou nome fantasia">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Valor da NF (R$) <span style="color:#dc2626;">*</span></label>
+            <input type="number" id="f-valor" min="0" step="0.01" required placeholder="0,00">
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Observação</label>
+            <textarea id="f-observacao" rows="2" placeholder="Observação opcional…"></textarea>
+          </div>
+        </div>
+        <div class="modal-acoes">
+          <button type="button" class="btn btn-secundario" onclick="fecharModal()">Cancelar</button>
+          <button type="submit" class="btn btn-primario" id="btn-salvar">Salvar NF</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal confirmação exclusão -->
+  <div class="modal-overlay" id="modal-excluir">
+    <div class="modal" style="max-width:380px;text-align:center;">
+      <div style="font-size:2rem;margin-bottom:12px;">⚠️</div>
+      <div class="modal-titulo">Excluir NF?</div>
+      <p class="txt-muted">Esta ação não pode ser desfeita.</p>
+      <div class="modal-acoes" style="justify-content:center;margin-top:20px;">
+        <button class="btn btn-secundario" onclick="fecharModalExcluir()">Cancelar</button>
+        <button class="btn btn-perigo" onclick="confirmarExclusao()">Excluir</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script>
+    if (!estaAutenticado()) location.href = "login.html";
+
+    let nfList    = [];
+    let pedidos   = [];
+    let idExcluir = null;
+
+    // ── Init ───────────────────────────────────────────────
+    (async () => {
+      try {
+        const [resPed, resNF] = await Promise.all([API.pedidos(), API.allFatDireto()]);
+        pedidos = resPed.dados || [];
+        nfList  = resNF.dados  || [];
+        popularSelectPedidos();
+        atualizarCards();
+        renderTabela();
+      } catch (e) {
+        document.getElementById("corpo-tabela").innerHTML =
+          `<tr><td colspan="7" class="estado-msg" style="color:#dc2626;">Erro ao carregar: ${esc(e.message)}</td></tr>`;
+      }
+    })();
+
+    function popularSelectPedidos() {
+      const sel = document.getElementById("filtro-pedido");
+      sel.innerHTML = `<option value="">Todos os pedidos</option>` +
+        pedidos.map(p => `<option value="${p.id}">${esc(p.descricao)}</option>`).join("");
+
+      const selForm = document.getElementById("f-pedido-id");
+      selForm.innerHTML = `<option value="">— Selecione o pedido —</option>` +
+        pedidos.map(p => `<option value="${p.id}">${esc(p.descricao)}</option>`).join("");
+    }
+
+    function atualizarCards() {
+      document.getElementById("card-qtd").textContent   = nfList.length;
+      const total = nfList.reduce((s, f) => s + num(f.valor), 0);
+      document.getElementById("card-total").textContent = fmtBRL(total);
+    }
+
+    // ── Tabela ─────────────────────────────────────────────
+    function renderTabela() {
+      const busca        = (document.getElementById("busca").value || "").toLowerCase();
+      const filtroPedido = document.getElementById("filtro-pedido").value;
+
+      const lista = nfList.filter(f => {
+        const passaPedido = !filtroPedido || String(f.pedido_id) === filtroPedido;
+        const passaBusca  = !busca ||
+          (f.num_nf     || "").toLowerCase().includes(busca) ||
+          (f.fornecedor || "").toLowerCase().includes(busca) ||
+          (f.pedido_descricao || "").toLowerCase().includes(busca);
+        return passaPedido && passaBusca;
+      });
+
+      if (!lista.length) {
+        document.getElementById("corpo-tabela").innerHTML =
+          `<tr><td colspan="7" class="estado-msg">Nenhuma NF encontrada.</td></tr>`;
+        return;
+      }
+
+      document.getElementById("corpo-tabela").innerHTML = lista.map(f => `
+        <tr>
+          <td>
+            <a href="pedido.html?id=${f.pedido_id}" style="color:var(--cor-primaria);text-decoration:none;font-weight:500;">
+              ${esc(f.pedido_descricao || f.pedido_id)}
+            </a>
+          </td>
+          <td><strong>${esc(f.num_nf)}</strong></td>
+          <td class="txt-muted">${fmtData(f.data_emissao)}</td>
+          <td>${esc(f.fornecedor)}</td>
+          <td class="num" style="font-weight:600;">${fmtBRL(f.valor)}</td>
+          <td class="txt-muted">${esc(f.observacao)}</td>
+          <td class="txt-direita">
+            <button class="btn btn-secundario btn-sm" onclick="editarNF(${f.id})" title="Editar">✏️</button>
+            <button class="btn btn-secundario btn-sm" onclick="pedirExclusao(${f.id})" title="Excluir" style="margin-left:4px;">🗑️</button>
+          </td>
+        </tr>`).join("");
+    }
+
+    // ── Modal ──────────────────────────────────────────────
+    function abrirModalNovaNF() {
+      document.getElementById("modal-nf-titulo").textContent = "Nova NF — Fat. Direto";
+      document.getElementById("f-id").value           = "";
+      document.getElementById("f-pedido-id").value    = "";
+      document.getElementById("f-num-nf").value       = "";
+      document.getElementById("f-data-emissao").value = new Date().toISOString().slice(0, 10);
+      document.getElementById("f-fornecedor").value   = "";
+      document.getElementById("f-valor").value        = "";
+      document.getElementById("f-observacao").value   = "";
+      document.getElementById("modal-nf").classList.add("aberto");
+    }
+
+    function editarNF(id) {
+      const f = nfList.find(x => String(x.id) === String(id));
+      if (!f) return;
+      document.getElementById("modal-nf-titulo").textContent = "Editar NF";
+      document.getElementById("f-id").value           = f.id;
+      document.getElementById("f-pedido-id").value    = f.pedido_id;
+      document.getElementById("f-num-nf").value       = f.num_nf || "";
+      document.getElementById("f-data-emissao").value = isoData(f.data_emissao);
+      document.getElementById("f-fornecedor").value   = f.fornecedor || "";
+      document.getElementById("f-valor").value        = f.valor || 0;
+      document.getElementById("f-observacao").value   = f.observacao || "";
+      document.getElementById("modal-nf").classList.add("aberto");
+    }
+
+    function fecharModal() {
+      document.getElementById("modal-nf").classList.remove("aberto");
+    }
+
+    async function salvarNF(e) {
+      e.preventDefault();
+      const btn = document.getElementById("btn-salvar");
+      btn.disabled = true; btn.textContent = "Salvando…";
+      try {
+        const dados = {
+          id:           document.getElementById("f-id").value || null,
+          pedido_id:    document.getElementById("f-pedido-id").value,
+          num_nf:       document.getElementById("f-num-nf").value,
+          data_emissao: document.getElementById("f-data-emissao").value,
+          fornecedor:   document.getElementById("f-fornecedor").value,
+          valor:        parseFloat(document.getElementById("f-valor").value) || 0,
+          observacao:   document.getElementById("f-observacao").value,
+        };
+        await API.saveFatDireto(dados);
+        fecharModal();
+        const res = await API.allFatDireto();
+        nfList = res.dados || [];
+        atualizarCards();
+        renderTabela();
+      } catch (err) {
+        alert("Erro ao salvar: " + err.message);
+      } finally {
+        btn.disabled = false; btn.textContent = "Salvar NF";
+      }
+    }
+
+    // ── Exclusão ───────────────────────────────────────────
+    function pedirExclusao(id) {
+      idExcluir = id;
+      document.getElementById("modal-excluir").classList.add("aberto");
+    }
+    function fecharModalExcluir() {
+      idExcluir = null;
+      document.getElementById("modal-excluir").classList.remove("aberto");
+    }
+    async function confirmarExclusao() {
+      if (!idExcluir) return;
+      try {
+        await API.deleteFatDireto(idExcluir);
+        fecharModalExcluir();
+        const res = await API.allFatDireto();
+        nfList = res.dados || [];
+        atualizarCards();
+        renderTabela();
+      } catch (err) {
+        alert("Erro ao excluir: " + err.message);
+      }
+    }
+
+    // ── Sair ───────────────────────────────────────────────
+    function sair(e) {
+      e.preventDefault();
+      clearToken();
+      location.href = "login.html";
+    }
+
+    // ── Utilitários ────────────────────────────────────────
+    function fmtBRL(v) {
+      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0);
+    }
+    function fmtData(v) {
+      if (!v) return "—";
+      const d = new Date(v);
+      return isNaN(d) ? String(v) : d.toLocaleDateString("pt-BR");
+    }
+    function isoData(v) {
+      if (!v) return "";
+      const d = new Date(v);
+      return isNaN(d) ? "" : d.toISOString().slice(0, 10);
+    }
+    function esc(s) {
+      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+    }
+    function num(v) { return parseFloat(v) || 0; }
+
+    document.getElementById("modal-nf").addEventListener("click", function(e) {
+      if (e.target === this) fecharModal();
+    });
+    document.getElementById("modal-excluir").addEventListener("click", function(e) {
+      if (e.target === this) fecharModalExcluir();
+    });
+  </script>
+  <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');</script>
+</body>
+</html>

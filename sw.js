@@ -5,7 +5,7 @@
 // Ex.: 'dc-pecem-v1' → 'dc-pecem-v2'
 // ─────────────────────────────────────────────────────────────
 
-const CACHE_NOME = 'dc-pecem-v1';
+const CACHE_NOME = 'dc-pecem-v2';
 
 const ARQUIVOS_ESTATICOS = [
   'index.html',
@@ -13,6 +13,8 @@ const ARQUIVOS_ESTATICOS = [
   'pedido.html',
   'medicao.html',
   'importacao.html',
+  'fat-direto.html',
+  'avanco.html',
   'login.html',
   'style.css',
   'api.js',
