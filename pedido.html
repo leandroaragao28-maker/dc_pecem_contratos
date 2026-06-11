@@ -333,6 +333,12 @@
             <input type="date" id="fd-data-emissao" required>
           </div>
           <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Boletim de Medição vinculado</label>
+            <select id="fd-medicao-id">
+              <option value="">— Sem BM vinculado —</option>
+            </select>
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
             <label>Fornecedor / Emitente <span style="color:#dc2626;">*</span></label>
             <input type="text" id="fd-fornecedor" required placeholder="Razão social ou nome fantasia">
           </div>
@@ -925,10 +931,13 @@
     async function carregarFaturamento() {
       document.getElementById("lista-faturamento").innerHTML = `<div class="estado-msg">Carregando…</div>`;
       try {
-        // Garante que medições estejam carregadas para o dropdown
         if (!medicoesList.length) await carregarMedicoes();
-        const res = await API.faturamento(pedidoId);
-        faturamentoList = res.dados || [];
+        const [resFat, resFatDir] = await Promise.all([
+          API.faturamento(pedidoId),
+          API.fatDireto(pedidoId),
+        ]);
+        faturamentoList = resFat.dados    || [];
+        fatDiretoList   = resFatDir.dados || [];
         renderFaturamento();
       } catch (e) {
         document.getElementById("lista-faturamento").innerHTML =
@@ -1085,6 +1094,11 @@
       document.getElementById("ff-bruto").value = Number(m.totalMedido).toFixed(2);
       const retPct = Number(pedidoAtual.perc_retencao) || 0;
       document.getElementById("ff-retencao").value = (Number(m.totalMedido) * retPct / 100).toFixed(2);
+      // Soma NFs de fat. direto vinculadas a este BM
+      const descFatDir = fatDiretoList
+        .filter(f => String(f.medicao_id) === String(id))
+        .reduce((s, f) => s + (parseFloat(f.valor) || 0), 0);
+      document.getElementById("ff-direto").value = descFatDir.toFixed(2);
       recalcularFatura();
     }
 
@@ -1234,6 +1248,7 @@
               <tr>
                 <th>Nº NF</th>
                 <th style="width:100px;">Data</th>
+                <th style="width:80px;">BM</th>
                 <th>Fornecedor</th>
                 <th class="num" style="width:130px;">Valor (R$)</th>
                 <th>Observação</th>
@@ -1245,6 +1260,7 @@
                 <tr>
                   <td><strong>${esc(f.num_nf)}</strong></td>
                   <td class="txt-muted">${fmtData(f.data_emissao)}</td>
+                  <td class="txt-muted">${f.medicao_num_bm ? esc(f.medicao_num_bm) : "—"}</td>
                   <td>${esc(f.fornecedor)}</td>
                   <td class="num" style="font-weight:600;">${fmtBRL(f.valor)}</td>
                   <td class="txt-muted">${esc(f.observacao)}</td>
@@ -1256,13 +1272,23 @@
             </tbody>
             <tfoot>
               <tr>
-                <td colspan="3" style="text-align:right;font-weight:600;">Total consumido</td>
+                <td colspan="4" style="text-align:right;font-weight:600;">Total consumido</td>
                 <td class="num" style="font-weight:600;">${fmtBRL(consumido)}</td>
                 <td colspan="2"></td>
               </tr>
             </tfoot>
           </table>
         </div>`;
+    }
+
+    function popularBMSelectFd(selecionado) {
+      const sel = document.getElementById("fd-medicao-id");
+      sel.innerHTML = `<option value="">— Sem BM vinculado —</option>` +
+        medicoesList.map(m =>
+          `<option value="${m.id}" ${String(m.id) === String(selecionado) ? "selected" : ""}>
+            ${esc(m.num_bm)} — ${esc(m.periodo)}
+          </option>`
+        ).join("");
     }
 
     function abrirModalFatDireto() {
@@ -1273,6 +1299,7 @@
       document.getElementById("fd-fornecedor").value     = "";
       document.getElementById("fd-valor").value          = "";
       document.getElementById("fd-observacao").value     = "";
+      popularBMSelectFd("");
       document.getElementById("modal-fat-direto").classList.add("aberto");
     }
 
@@ -1286,6 +1313,7 @@
       document.getElementById("fd-fornecedor").value     = f.fornecedor || "";
       document.getElementById("fd-valor").value          = f.valor || 0;
       document.getElementById("fd-observacao").value     = f.observacao || "";
+      popularBMSelectFd(f.medicao_id);
       document.getElementById("modal-fat-direto").classList.add("aberto");
     }
 
@@ -1301,6 +1329,7 @@
         const dados = {
           id:           document.getElementById("fd-nf-id").value || null,
           pedido_id:    pedidoId,
+          medicao_id:   document.getElementById("fd-medicao-id").value || null,
           num_nf:       document.getElementById("fd-num-nf").value,
           data_emissao: document.getElementById("fd-data-emissao").value,
           fornecedor:   document.getElementById("fd-fornecedor").value,

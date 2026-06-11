@@ -66,6 +66,7 @@
               <th>Pedido</th>
               <th style="width:90px;">Nº NF</th>
               <th style="width:100px;">Data</th>
+              <th style="width:80px;">BM</th>
               <th>Fornecedor</th>
               <th class="num" style="width:130px;">Valor (R$)</th>
               <th>Observação</th>
@@ -73,7 +74,7 @@
             </tr>
           </thead>
           <tbody id="corpo-tabela">
-            <tr><td colspan="7" class="estado-msg">Carregando…</td></tr>
+            <tr><td colspan="8" class="estado-msg">Carregando…</td></tr>
           </tbody>
         </table>
       </div>
@@ -89,8 +90,14 @@
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
           <div class="form-grupo" style="grid-column:1/-1;">
             <label>Pedido <span style="color:#dc2626;">*</span></label>
-            <select id="f-pedido-id" required>
+            <select id="f-pedido-id" required onchange="carregarMedicoesPedido()">
               <option value="">— Selecione o pedido —</option>
+            </select>
+          </div>
+          <div class="form-grupo" style="grid-column:1/-1;">
+            <label>Boletim de Medição vinculado</label>
+            <select id="f-medicao-id">
+              <option value="">— Sem BM vinculado —</option>
             </select>
           </div>
           <div class="form-grupo">
@@ -191,7 +198,7 @@
 
       if (!lista.length) {
         document.getElementById("corpo-tabela").innerHTML =
-          `<tr><td colspan="7" class="estado-msg">Nenhuma NF encontrada.</td></tr>`;
+          `<tr><td colspan="8" class="estado-msg">Nenhuma NF encontrada.</td></tr>`;
         return;
       }
 
@@ -204,6 +211,7 @@
           </td>
           <td><strong>${esc(f.num_nf)}</strong></td>
           <td class="txt-muted">${fmtData(f.data_emissao)}</td>
+          <td class="txt-muted">${f.medicao_num_bm ? esc(f.medicao_num_bm) : "—"}</td>
           <td>${esc(f.fornecedor)}</td>
           <td class="num" style="font-weight:600;">${fmtBRL(f.valor)}</td>
           <td class="txt-muted">${esc(f.observacao)}</td>
@@ -215,10 +223,37 @@
     }
 
     // ── Modal ──────────────────────────────────────────────
+    const medicoesPorPedido = {};
+
+    async function carregarMedicoesPedido() {
+      const pedidoId = document.getElementById("f-pedido-id").value;
+      const sel      = document.getElementById("f-medicao-id");
+      sel.innerHTML  = `<option value="">— Sem BM vinculado —</option>`;
+      if (!pedidoId) return;
+
+      if (!medicoesPorPedido[pedidoId]) {
+        sel.innerHTML = `<option value="">Carregando BMs…</option>`;
+        try {
+          const res = await API.medicoes(pedidoId);
+          medicoesPorPedido[pedidoId] = (res.dados || []).sort((a, b) =>
+            String(a.num_bm).localeCompare(String(b.num_bm)));
+        } catch {
+          sel.innerHTML = `<option value="">Erro ao carregar BMs</option>`;
+          return;
+        }
+      }
+
+      sel.innerHTML = `<option value="">— Sem BM vinculado —</option>` +
+        medicoesPorPedido[pedidoId].map(m =>
+          `<option value="${m.id}">${esc(m.num_bm)} — ${esc(m.periodo)}</option>`
+        ).join("");
+    }
+
     function abrirModalNovaNF() {
       document.getElementById("modal-nf-titulo").textContent = "Nova NF — Fat. Direto";
       document.getElementById("f-id").value           = "";
       document.getElementById("f-pedido-id").value    = "";
+      document.getElementById("f-medicao-id").innerHTML = `<option value="">— Sem BM vinculado —</option>`;
       document.getElementById("f-num-nf").value       = "";
       document.getElementById("f-data-emissao").value = new Date().toISOString().slice(0, 10);
       document.getElementById("f-fornecedor").value   = "";
@@ -227,7 +262,7 @@
       document.getElementById("modal-nf").classList.add("aberto");
     }
 
-    function editarNF(id) {
+    async function editarNF(id) {
       const f = nfList.find(x => String(x.id) === String(id));
       if (!f) return;
       document.getElementById("modal-nf-titulo").textContent = "Editar NF";
@@ -238,6 +273,9 @@
       document.getElementById("f-fornecedor").value   = f.fornecedor || "";
       document.getElementById("f-valor").value        = f.valor || 0;
       document.getElementById("f-observacao").value   = f.observacao || "";
+      // Carrega BMs do pedido e seleciona o vinculado
+      await carregarMedicoesPedido();
+      document.getElementById("f-medicao-id").value = f.medicao_id || "";
       document.getElementById("modal-nf").classList.add("aberto");
     }
 
@@ -253,6 +291,7 @@
         const dados = {
           id:           document.getElementById("f-id").value || null,
           pedido_id:    document.getElementById("f-pedido-id").value,
+          medicao_id:   document.getElementById("f-medicao-id").value || null,
           num_nf:       document.getElementById("f-num-nf").value,
           data_emissao: document.getElementById("f-data-emissao").value,
           fornecedor:   document.getElementById("f-fornecedor").value,
