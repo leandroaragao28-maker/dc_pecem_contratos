@@ -1092,7 +1092,7 @@
     const tabBtnOriginal = window.trocarTab;
     window.trocarTab = function(id, btn) {
       tabBtnOriginal(id, btn);
-      if (id === "medicoes"    && !medicoesList.length) carregarMedicoes();
+      if (id === "medicoes") { if (medicoesList.length) renderMedicoes(); else carregarMedicoes(); }
       if (id === "faturamento")                         carregarFaturamento();
       if (id === "fat-direto")                          carregarFatDireto();
       if (id === "apontamentos")                        carregarApontamentos();
