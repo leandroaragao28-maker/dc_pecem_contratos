@@ -654,17 +654,7 @@
           <!-- Card 3: Faturamento direto -->
           <div class="fin-card">
             <div class="fin-card-hdr">${iCard} Faturamento direto</div>
-            <div class="fd-layout">
-              <div>
-                <div class="fd-item"><div class="fd-label">Teto</div><div class="fd-val">${fmtBRL(tetoFatDireto)}</div></div>
-                <div class="fd-item"><div class="fd-label">Consumido</div><div class="fd-val">${fmtBRL(fatDiretoConsumido)}</div></div>
-                <div class="fd-item"><div class="fd-label">Saldo</div><div class="fd-val" style="color:${saldoFatDireto < 0 ? "#dc2626" : "inherit"};">${fmtBRL(saldoFatDireto)}</div></div>
-              </div>
-              ${donutGauge(pctGauge)}
-            </div>
-            <div class="fd-bar-w"><div class="fd-bar" style="width:${Math.min(100, pctGauge).toFixed(1)}%"></div></div>
-            <div class="fd-barlbl"><span>0%</span><span>100%</span></div>
-            ${pctGauge >= 100 ? `<div class="fd-alerta">⚠️ Teto ${pctGauge > 100 ? "ultrapassado" : "100% consumido"}</div>` : ""}
+            <div id="card-fat-direto-body">${htmlFatDiretoBody(tetoFatDireto, fatDiretoConsumido)}</div>
           </div>
         </div>
 
@@ -770,6 +760,23 @@
     }
 
     // Medidor circular (donut) de consumo do teto de fat. direto
+    function htmlFatDiretoBody(teto, consumido) {
+      const saldo = teto - consumido;
+      const pct   = teto > 0 ? (consumido / teto * 100) : 0;
+      return `
+        <div class="fd-layout">
+          <div>
+            <div class="fd-item"><div class="fd-label">Teto</div><div class="fd-val">${fmtBRL(teto)}</div></div>
+            <div class="fd-item"><div class="fd-label">Consumido</div><div class="fd-val">${fmtBRL(consumido)}</div></div>
+            <div class="fd-item"><div class="fd-label">Saldo</div><div class="fd-val" style="color:${saldo < 0 ? "#dc2626" : "inherit"};">${fmtBRL(saldo)}</div></div>
+          </div>
+          ${donutGauge(pct)}
+        </div>
+        <div class="fd-bar-w"><div class="fd-bar" style="width:${Math.min(100, pct).toFixed(1)}%"></div></div>
+        <div class="fd-barlbl"><span>0%</span><span>100%</span></div>
+        ${pct >= 100 ? `<div class="fd-alerta">⚠️ Teto ${pct > 100 ? "ultrapassado" : "100% consumido"}</div>` : ""}`;
+    }
+
     function donutGauge(pct, size=86) {
       const clamped = Math.max(0, Math.min(100, pct));
       const r = 28, cx = 40, cy = 40;
@@ -1445,6 +1452,9 @@
       const teto      = num(pedidoAtual.valor_teto_fat_direto);
       const consumido = fatDiretoList.reduce((s, f) => s + num(f.valor), 0);
       const saldo     = teto - consumido;
+
+      const cardBody = document.getElementById("card-fat-direto-body");
+      if (cardBody) cardBody.innerHTML = htmlFatDiretoBody(teto, consumido);
 
       const saldoEl = document.getElementById("saldo-fat-direto");
       if (teto > 0 || consumido > 0) {
