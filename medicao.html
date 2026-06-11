@@ -163,7 +163,7 @@
     function renderBM() {
       const { medicao, itens, medicaoItens, acumuladoAnterior } = dadosBM;
 
-      document.title = `${medicao.num_bm} — ${medicao.periodo} — DC Pecém`;
+      document.title = `${medicao.num_bm} — ${fmtPeriodo(medicao.periodo)} — DC Pecém`;
       document.getElementById("titulo-header").innerHTML =
         `${esc(medicao.num_bm)} &nbsp;<span class="${BADGES_BM[medicao.status] || 'badge'}" style="font-size:0.75rem;vertical-align:middle;">${medicao.status}</span>`;
       document.getElementById("link-pedido").href    = `pedido.html?id=${medicao.pedido_id}`;
@@ -220,7 +220,7 @@
 
       document.getElementById("main-conteudo").innerHTML = `
         <div class="flex ai-center gap-12 mb-24" style="flex-wrap:wrap;">
-          <div class="txt-muted">Período: <strong>${esc(medicao.periodo)}</strong></div>
+          <div class="txt-muted">Período: <strong>${fmtPeriodo(medicao.periodo)}</strong></div>
           <div class="txt-muted">Pedido: <strong>#${medicao.pedido_id}</strong></div>
           <div class="txt-muted">Itens: <strong>${itens.length}</strong></div>
         </div>
@@ -343,7 +343,7 @@
     function abrirModalEditar() {
       const m = dadosBM.medicao;
       document.getElementById("fb-num-bm").value  = m.num_bm;
-      document.getElementById("fb-periodo").value = m.periodo;
+      document.getElementById("fb-periodo").value = fmtPeriodo(m.periodo);
       document.getElementById("fb-status").value  = m.status;
       document.getElementById("modal-bm").classList.add("aberto");
     }
@@ -389,6 +389,14 @@
     }
     function fmtNum(v) {
       return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 }).format(Number(v) || 0);
+    }
+    function fmtPeriodo(v) {
+      if (!v) return "—";
+      const s = String(v).trim();
+      if (/^\d{2}\/\d{4}$/.test(s)) return s;
+      const d = new Date(s);
+      if (!isNaN(d)) return String(d.getUTCMonth() + 1).padStart(2, "0") + "/" + d.getUTCFullYear();
+      return s;
     }
     function esc(s) {
       return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
