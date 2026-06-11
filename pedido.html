@@ -37,66 +37,60 @@
     .tab-painel { display: none; }
     .tab-painel.ativo { display: block; }
 
-    /* Painel financeiro */
-    .fin-painel {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 16px;
-      border-top: 1px solid var(--cor-borda);
-      margin-top: 10px;
-      padding-top: 12px;
-    }
-    .fin-titulo {
-      font-size: 0.65rem;
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      color: var(--cor-texto-m);
-      font-weight: 600;
-    }
-    .fin-destaque {
-      font-size: 1.15rem;
-      font-weight: 700;
-      color: var(--cor-primaria);
-      line-height: 1.2;
-    }
-    .fin-metrica {
-      display: grid;
-      grid-template-columns: minmax(110px, 1fr) 1.4fr 44px;
-      align-items: center;
-      gap: 8px;
-      margin-top: 6px;
-    }
-    .fin-metrica .mlabel {
-      font-size: 0.63rem;
-      text-transform: uppercase;
-      letter-spacing: 0.3px;
-      color: var(--cor-texto-m);
-    }
-    .fin-metrica .mval { font-size: 0.82rem; font-weight: 600; }
-    .fin-bar-wrap {
-      background: var(--cor-borda);
-      border-radius: 99px;
-      height: 6px;
-      overflow: hidden;
-    }
-    .fin-bar {
-      height: 100%;
-      background: var(--cor-acento);
-      border-radius: 99px;
-      transition: width .4s ease;
-    }
-    .fin-pct { font-size: 0.67rem; color: var(--cor-texto-m); text-align: right; }
-    .fin-gauge-bloco {
-      text-align: center;
-      border-left: 1px solid var(--cor-borda);
-      padding-left: 14px;
-    }
-    .fin-gauge-bloco .fin-destaque { font-size: 0.95rem; }
-    @media (max-width: 600px) {
-      .fin-painel { grid-template-columns: 1fr; gap: 10px; }
-      .fin-gauge-bloco { border-left: none; border-top: 1px solid var(--cor-borda); padding-left: 0; padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; text-align: left; }
-      .fin-gauge-bloco svg { max-width: 120px !important; margin: 0; }
-      .fin-gauge-bloco .fin-titulo { margin-top: 0; }
+    /* ── Barra de identificação ── */
+    .ident-bar { display:flex; background:#fff; border:1px solid var(--cor-borda); border-radius:var(--raio); padding:10px 0; margin-bottom:12px; overflow-x:auto; }
+    .ident-item { flex:1; min-width:90px; padding:2px 14px; border-right:1px solid var(--cor-borda); }
+    .ident-item:last-child { border-right:none; }
+    .ident-item .ilabel { font-size:0.66rem; color:var(--cor-texto-m); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:4px; }
+    .ident-item .ivalue { font-size:0.86rem; font-weight:500; display:flex; align-items:center; gap:5px; }
+    .ident-item.destaque .ivalue { font-size:1.05rem; font-weight:700; color:var(--cor-primaria); }
+
+    /* ── 3 cards financeiros ── */
+    .fin-cards { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:12px; }
+    .fin-card  { background:#fff; border:1px solid var(--cor-borda); border-radius:var(--raio); padding:14px 16px; }
+    .fin-card-hdr { display:flex; align-items:center; gap:7px; font-size:0.82rem; font-weight:600; color:var(--cor-primaria); margin-bottom:10px; padding-bottom:9px; border-bottom:1px solid var(--cor-borda); }
+
+    /* Card 1 — barras */
+    .evo-row { display:grid; grid-template-columns:62px 110px 1fr 38px; align-items:center; gap:8px; padding:5px 0; }
+    .evo-row + .evo-row { border-top:1px solid #f3f4f6; }
+    .evo-label { font-size:0.7rem; color:var(--cor-texto-m); }
+    .evo-val   { font-size:0.75rem; font-weight:600; }
+    .evo-bar-w { background:#e8edf2; border-radius:99px; height:6px; overflow:hidden; }
+    .evo-bar   { height:100%; background:var(--cor-acento); border-radius:99px; }
+    .evo-pct   { font-size:0.67rem; color:var(--cor-texto-m); text-align:right; }
+
+    /* Card 2 — resumo */
+    .res-row   { display:flex; justify-content:space-between; align-items:center; padding:5px 0; border-bottom:1px solid #f3f4f6; }
+    .res-row:last-child { border-bottom:none; }
+    .res-label { font-size:0.73rem; color:var(--cor-texto-m); }
+    .res-val   { font-size:0.8rem; font-weight:600; }
+    .res-big   { font-size:1.1rem; font-weight:700; color:var(--cor-acento); }
+    .res-green { color:#16a34a; font-size:1rem; font-weight:700; }
+    .res-ts    { display:flex; align-items:center; gap:4px; font-size:0.65rem; color:var(--cor-texto-m); margin-top:8px; }
+
+    /* Card 3 — faturamento direto */
+    .fd-layout { display:grid; grid-template-columns:1fr auto; gap:12px; align-items:center; }
+    .fd-item   { margin-bottom:7px; }
+    .fd-label  { font-size:0.65rem; text-transform:uppercase; letter-spacing:0.4px; color:var(--cor-texto-m); }
+    .fd-val    { font-size:0.86rem; font-weight:600; margin-top:1px; }
+    .fd-bar-w  { background:#e8edf2; border-radius:99px; height:6px; overflow:hidden; margin-top:10px; }
+    .fd-bar    { height:100%; background:var(--cor-acento); border-radius:99px; }
+    .fd-barlbl { display:flex; justify-content:space-between; font-size:0.62rem; color:var(--cor-texto-m); margin-top:3px; }
+    .fd-alerta { display:flex; align-items:center; gap:5px; background:#FEF3C7; border:1px solid #F59E0B; border-radius:6px; padding:5px 9px; font-size:0.7rem; color:#92400E; margin-top:8px; }
+
+    /* Escopo card */
+    .escopo-card { display:flex; align-items:flex-start; gap:10px; background:#fff; border:1px solid var(--cor-borda); border-radius:var(--raio); padding:12px 14px; margin-bottom:12px; }
+    .escopo-card .et { font-size:0.72rem; font-weight:700; color:var(--cor-primaria); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:4px; }
+    .escopo-card .ev { font-size:0.83rem; line-height:1.55; white-space:pre-wrap; }
+
+    @media (max-width:700px) {
+      .ident-bar { flex-wrap:wrap; }
+      .ident-item { min-width:calc(50% - 1px); flex:none; border-bottom:1px solid var(--cor-borda); }
+      .ident-item:nth-child(2n) { border-right:none; }
+      .ident-item:nth-last-child(-n+2):not(:nth-child(2n+1)) { border-bottom:none; }
+      .ident-item:last-child { border-bottom:none; }
+      .fin-cards { grid-template-columns:1fr; }
+      .evo-row { grid-template-columns:60px 100px 1fr 36px; }
     }
   </style>
   <link rel="manifest" href="manifest.json">
@@ -539,54 +533,118 @@
       const tetoFatDireto      = num(p.valor_teto_fat_direto);
       const saldoFatDireto     = tetoFatDireto - fatDiretoConsumido;
       const pctGauge           = tetoFatDireto > 0 ? (fatDiretoConsumido / tetoFatDireto * 100) : 0;
+      const saldoContratual    = num(p.valor) - totalExecutado;
+      const avancoPct          = num(p.valor) > 0 ? (totalExecutado / num(p.valor) * 100) : 0;
+      const agora              = new Date();
+      const tsAtualiz          = agora.toLocaleDateString("pt-BR") + " às " + agora.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+      const dotCores           = {"em negociação":"#f59e0b","aguardando pedido":"#9ca3af","pedido emitido":"var(--cor-acento)","concluído":"#16a34a"};
+      const dotCor             = dotCores[p.status] || "#9ca3af";
+
+      // ícones SVG inline
+      const iDoc    = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><rect x="3" y="1.5" width="9" height="13" rx="1.5" stroke="var(--cor-acento)" stroke-width="1.4"/><line x1="5.5" y1="6" x2="10" y2="6" stroke="var(--cor-acento)" stroke-width="1.2"/><line x1="5.5" y1="8.5" x2="8.5" y2="8.5" stroke="var(--cor-acento)" stroke-width="1.2"/></svg>`;
+      const iUser   = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="5.5" r="2.5" stroke="#9ca3af" stroke-width="1.4"/><path d="M2.5 14c0-3 2.5-5 5.5-5s5.5 2 5.5 5" stroke="#9ca3af" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+      const iCal    = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="3" width="13" height="11" rx="1.5" stroke="#9ca3af" stroke-width="1.4"/><line x1="5.5" y1="1" x2="5.5" y2="5" stroke="#9ca3af" stroke-width="1.4" stroke-linecap="round"/><line x1="10.5" y1="1" x2="10.5" y2="5" stroke="#9ca3af" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="7.5" x2="14.5" y2="7.5" stroke="#9ca3af" stroke-width="1.1"/></svg>`;
+      const iClk    = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#9ca3af" stroke-width="1.4"/><polyline points="8,5 8,8 10.5,8" stroke="#9ca3af" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const iShield = `<svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M8 1.5L2 4.5v4c0 3.5 6 6 6 6s6-2.5 6-6v-4L8 1.5z" stroke="#9ca3af" stroke-width="1.4" stroke-linejoin="round"/></svg>`;
+      const iChart  = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><polyline points="1.5,13.5 5,8 9,10.5 14.5,3" stroke="var(--cor-acento)" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const iPie    = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="var(--cor-acento)" stroke-width="1.4"/><path d="M8 8V2" stroke="var(--cor-acento)" stroke-width="1.4" stroke-linecap="round"/><path d="M8 8L13.2 11.5" stroke="var(--cor-acento)" stroke-width="1.4" stroke-linecap="round"/></svg>`;
+      const iCard   = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="13" height="9" rx="1.5" stroke="var(--cor-acento)" stroke-width="1.4"/><line x1="1.5" y1="7.5" x2="14.5" y2="7.5" stroke="var(--cor-acento)" stroke-width="1.4"/></svg>`;
+      const iTarget = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="var(--cor-acento)" stroke-width="1.4"/><circle cx="8" cy="8" r="2.8" stroke="var(--cor-acento)" stroke-width="1.2"/><circle cx="8" cy="8" r="1" fill="var(--cor-acento)"/></svg>`;
+      const iClkSm  = `<svg width="10" height="10" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#9ca3af" stroke-width="1.4"/><polyline points="8,5 8,8 10.5,8" stroke="#9ca3af" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
       document.getElementById("conteudo").innerHTML = `
-        <!-- Dados do pedido -->
-        <div class="card mb-24">
-          <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:16px;">
-            <div class="info-item"><label>Nº PED</label><span>${esc(p.num_pedido_sap) || "—"}</span></div>
-            <div class="info-item"><label>Responsável</label><span>${esc(p.responsavel) || "—"}</span></div>
-            <div class="info-item"><label>Status</label><span class="${BADGES[p.status] || 'badge'}">${p.status || "—"}</span></div>
-            <div class="info-item"><label>Data de emissão</label><span>${fmtData(p.data_emissao)}</span></div>
-            <div class="info-item"><label>Início</label><span>${fmtData(p.data_inicio)}</span></div>
-            <div class="info-item"><label>Término previsto</label><span>${fmtData(p.termino_previsto)}</span></div>
-            <div class="info-item"><label>% Retenção</label><span>${p.perc_retencao ? p.perc_retencao + "%" : "—"}</span></div>
+        <!-- Barra de identificação -->
+        <div class="ident-bar">
+          <div class="ident-item destaque">
+            <div class="ilabel">Nº PED</div>
+            <div class="ivalue">${iDoc}${esc(p.num_pedido_sap) || "—"}</div>
           </div>
-          <div class="fin-painel">
-            <!-- Esquerda: contrato + barras -->
-            <div>
-              <div style="text-align:center;margin-bottom:6px;">
-                <div class="fin-titulo">Valor do Contrato</div>
-                <div class="fin-destaque">${fmtBRL(p.valor)}</div>
-              </div>
-              ${metricaBar("Valor Executado", totalExecutado,     num(p.valor))}
-              ${metricaBar("Valor Medido",    totalMedido,        num(p.valor))}
-              ${metricaBar("Valor Faturado",  totalFaturado,      num(p.valor))}
-              ${metricaBar("Valor Retido",    totalRetidoLiquido, num(p.valor))}
-            </div>
-            <!-- Direita: teto + gauge -->
-            <div class="fin-gauge-bloco">
-              <div class="fin-titulo">Teto Fat. Direto</div>
-              <div class="fin-destaque">${fmtBRL(tetoFatDireto)}</div>
-              ${gaugeSVG(pctGauge)}
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px;text-align:left;">
-                <div>
-                  <div class="fin-titulo">Consumido</div>
-                  <div style="font-weight:600;font-size:0.82rem;">${fmtBRL(fatDiretoConsumido)}</div>
-                </div>
-                <div>
-                  <div class="fin-titulo">Saldo</div>
-                  <div style="font-weight:600;font-size:0.82rem;color:${saldoFatDireto < 0 ? '#dc2626' : 'var(--cor-acento)'};">${fmtBRL(saldoFatDireto)}</div>
-                </div>
-              </div>
-            </div>
+          <div class="ident-item">
+            <div class="ilabel">Responsável</div>
+            <div class="ivalue">${iUser}${esc(p.responsavel) || "—"}</div>
           </div>
-          ${p.escopo_detalhado ? `
-          <div style="margin-top:14px;border-top:1px solid var(--cor-borda);padding-top:12px;">
-            <div style="font-size:0.74rem;text-transform:uppercase;letter-spacing:0.4px;color:var(--cor-texto-m);font-weight:600;margin-bottom:6px;">Escopo Detalhado</div>
-            <div style="font-size:0.86rem;white-space:pre-wrap;line-height:1.6;">${esc(p.escopo_detalhado)}</div>
-          </div>` : ""}
+          <div class="ident-item">
+            <div class="ilabel">Status</div>
+            <div class="ivalue"><span style="width:8px;height:8px;border-radius:50%;background:${dotCor};flex-shrink:0;display:inline-block;"></span>${p.status || "—"}</div>
+          </div>
+          <div class="ident-item">
+            <div class="ilabel">Data de emissão</div>
+            <div class="ivalue">${iCal}${fmtData(p.data_emissao)}</div>
+          </div>
+          <div class="ident-item">
+            <div class="ilabel">Início</div>
+            <div class="ivalue">${iClk}${fmtData(p.data_inicio)}</div>
+          </div>
+          <div class="ident-item">
+            <div class="ilabel">Término previsto</div>
+            <div class="ivalue">${iCal}${fmtData(p.termino_previsto)}</div>
+          </div>
+          <div class="ident-item">
+            <div class="ilabel">% Retenção</div>
+            <div class="ivalue">${iShield}${p.perc_retencao ? p.perc_retencao + "%" : "—"}</div>
+          </div>
         </div>
+
+        <!-- 3 cards financeiros -->
+        <div class="fin-cards">
+          <!-- Card 1: Evolução do contrato -->
+          <div class="fin-card">
+            <div class="fin-card-hdr">${iChart} Evolução do contrato</div>
+            ${evoRow("Executado", totalExecutado,     num(p.valor))}
+            ${evoRow("Medido",    totalMedido,        num(p.valor))}
+            ${evoRow("Faturado",  totalFaturado,      num(p.valor))}
+            ${evoRow("Retido",    totalRetidoLiquido, num(p.valor))}
+          </div>
+
+          <!-- Card 2: Resumo financeiro -->
+          <div class="fin-card">
+            <div class="fin-card-hdr">${iPie} Resumo financeiro</div>
+            <div class="res-row">
+              <span class="res-label">Valor contratado</span>
+              <span class="res-big">${fmtBRL(p.valor)}</span>
+            </div>
+            <div class="res-row">
+              <span class="res-label">Executado acumulado</span>
+              <span class="res-val">${fmtBRL(totalExecutado)}</span>
+            </div>
+            <div class="res-row">
+              <span class="res-label">Saldo contratual</span>
+              <span class="res-green">${fmtBRL(saldoContratual)}</span>
+            </div>
+            <div class="res-row">
+              <span class="res-label">Retenção acumulada</span>
+              <span class="res-val">${fmtBRL(totalRetidoLiquido)}</span>
+            </div>
+            <div class="res-row">
+              <span class="res-label">Avanço financeiro</span>
+              <span class="res-big">${avancoPct.toFixed(2)}%</span>
+            </div>
+            <div class="res-ts">${iClkSm} Última atualização: ${tsAtualiz}</div>
+          </div>
+
+          <!-- Card 3: Faturamento direto -->
+          <div class="fin-card">
+            <div class="fin-card-hdr">${iCard} Faturamento direto</div>
+            <div class="fd-layout">
+              <div>
+                <div class="fd-item"><div class="fd-label">Teto</div><div class="fd-val">${fmtBRL(tetoFatDireto)}</div></div>
+                <div class="fd-item"><div class="fd-label">Consumido</div><div class="fd-val">${fmtBRL(fatDiretoConsumido)}</div></div>
+                <div class="fd-item"><div class="fd-label">Saldo</div><div class="fd-val" style="color:${saldoFatDireto < 0 ? "#dc2626" : "inherit"};">${fmtBRL(saldoFatDireto)}</div></div>
+              </div>
+              ${donutGauge(pctGauge)}
+            </div>
+            <div class="fd-bar-w"><div class="fd-bar" style="width:${Math.min(100, pctGauge).toFixed(1)}%"></div></div>
+            <div class="fd-barlbl"><span>0%</span><span>100%</span></div>
+            ${pctGauge >= 100 ? `<div class="fd-alerta">⚠️ Teto ${pctGauge > 100 ? "ultrapassado" : "100% consumido"}</div>` : ""}
+          </div>
+        </div>
+
+        <!-- Escopo detalhado -->
+        ${p.escopo_detalhado ? `
+        <div class="escopo-card">
+          ${iTarget}
+          <div><div class="et">Escopo detalhado</div><div class="ev">${esc(p.escopo_detalhado)}</div></div>
+        </div>` : ""}
 
         <!-- Tabs -->
         <div class="tab-nav">
@@ -688,39 +746,38 @@
       `;
     }
 
-    // Barra de proporção (valor / base do contrato)
-    function metricaBar(label, valor, base) {
+    // Linha de evolução com barra de progresso
+    function evoRow(label, valor, base) {
       const pct = base > 0 ? (valor / base * 100) : 0;
       const w   = Math.max(0, Math.min(100, pct));
       return `
-        <div class="fin-metrica">
-          <div>
-            <div class="mlabel">${label}</div>
-            <div class="mval">${fmtBRL(valor)}</div>
-          </div>
-          <div class="fin-bar-wrap"><div class="fin-bar" style="width:${w}%"></div></div>
-          <div class="fin-pct">${pct.toFixed(2)}%</div>
+        <div class="evo-row">
+          <span class="evo-label">${label}</span>
+          <span class="evo-val">${fmtBRL(valor)}</span>
+          <div class="evo-bar-w"><div class="evo-bar" style="width:${w}%"></div></div>
+          <span class="evo-pct">${pct.toFixed(2)}%</span>
         </div>`;
     }
 
-    // Medidor semicircular de consumo do teto de fat. direto
-    function gaugeSVG(pct) {
-      const p   = Math.max(0, Math.min(100, pct)) / 100;
-      const cx = 80, cy = 80, r = 66;
-      const ang = Math.PI - p * Math.PI;
-      const nx  = cx + (r - 10) * Math.cos(ang);
-      const ny  = cy - (r - 10) * Math.sin(ang);
+    // Medidor circular (donut) de consumo do teto de fat. direto
+    function donutGauge(pct, size=86) {
+      const clamped = Math.max(0, Math.min(100, pct));
+      const r = 28, cx = 40, cy = 40;
+      const circ  = 2 * Math.PI * r;
+      const filled = circ * (clamped / 100);
       const over = pct > 100;
       const cor  = over ? "#dc2626" : "var(--cor-acento)";
       return `
-        <svg viewBox="0 0 160 94" width="100%" style="max-width:160px;display:block;margin:4px auto 0;">
-          <path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy} Z" fill="#D6E4F7"/>
-          <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}"
-                stroke="${cor}" stroke-width="3" stroke-linecap="round"/>
-          <circle cx="${cx}" cy="${cy}" r="5" fill="${cor}"/>
-          <text x="${cx - r}" y="${cy + 13}" font-size="9" fill="#6b7280" text-anchor="start">0%</text>
-          <text x="${cx + r}" y="${cy + 13}" font-size="9" fill="#6b7280" text-anchor="end">100%</text>
-          <text x="${cx}" y="${cy - 10}" font-size="16" font-weight="700" fill="${cor}" text-anchor="middle">${pct.toFixed(1)}%</text>
+        <svg width="${size}" height="${size}" viewBox="0 0 80 80">
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#e8edf2" stroke-width="8"/>
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${cor}" stroke-width="8"
+            stroke-dasharray="${filled.toFixed(1)} ${circ.toFixed(1)}"
+            stroke-linecap="round"
+            transform="rotate(-90 ${cx} ${cy})"/>
+          <text x="${cx}" y="${cy - 3}" text-anchor="middle" dominant-baseline="middle"
+            font-size="13" font-weight="700" fill="${cor}">${clamped.toFixed(0)}%</text>
+          <text x="${cx}" y="${cy + 11}" text-anchor="middle"
+            font-size="7" fill="#6b7280">consumido</text>
         </svg>`;
     }
 
