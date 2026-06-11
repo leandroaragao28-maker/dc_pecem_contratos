@@ -36,6 +36,66 @@
     .tab-btn.ativo { color: var(--cor-primaria); border-bottom-color: var(--cor-primaria); font-weight: 600; }
     .tab-painel { display: none; }
     .tab-painel.ativo { display: block; }
+
+    /* Painel financeiro */
+    .fin-painel {
+      display: grid;
+      grid-template-columns: 1.5fr 1fr;
+      gap: 32px;
+      border-top: 1px solid var(--cor-borda);
+      margin-top: 16px;
+      padding-top: 20px;
+    }
+    .fin-titulo {
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--cor-texto-m);
+      font-weight: 600;
+    }
+    .fin-destaque {
+      font-size: 1.7rem;
+      font-weight: 700;
+      color: var(--cor-primaria);
+      margin-top: 2px;
+      line-height: 1.1;
+    }
+    .fin-metrica {
+      display: grid;
+      grid-template-columns: minmax(140px, 1fr) 1.4fr 60px;
+      align-items: center;
+      gap: 14px;
+      margin-top: 14px;
+    }
+    .fin-metrica .mlabel {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      color: var(--cor-texto-m);
+    }
+    .fin-metrica .mval { font-size: 0.98rem; font-weight: 600; }
+    .fin-bar-wrap {
+      background: var(--cor-borda);
+      border-radius: 99px;
+      height: 10px;
+      overflow: hidden;
+    }
+    .fin-bar {
+      height: 100%;
+      background: var(--cor-acento);
+      border-radius: 99px;
+      transition: width .4s ease;
+    }
+    .fin-pct { font-size: 0.8rem; color: var(--cor-texto-m); text-align: right; }
+    .fin-gauge-bloco {
+      text-align: center;
+      border-left: 1px solid var(--cor-borda);
+      padding-left: 24px;
+    }
+    @media (max-width: 760px) {
+      .fin-painel { grid-template-columns: 1fr; }
+      .fin-gauge-bloco { border-left: none; border-top: 1px solid var(--cor-borda); padding-left: 0; padding-top: 16px; }
+    }
   </style>
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#1E3A5F">
@@ -474,6 +534,9 @@
       const totalRetidoLiquido = _fatHdr.reduce((s, f) => s + num(f.retencao), 0)
                                - _devHdr.reduce((s, f) => s + num(f.valor_bruto), 0);
       const fatDiretoConsumido = fatDiretoList.reduce((s, f) => s + num(f.valor), 0);
+      const tetoFatDireto      = num(p.valor_teto_fat_direto);
+      const saldoFatDireto     = tetoFatDireto - fatDiretoConsumido;
+      const pctGauge           = tetoFatDireto > 0 ? (fatDiretoConsumido / tetoFatDireto * 100) : 0;
 
       document.getElementById("conteudo").innerHTML = `
         <!-- Dados do pedido -->
@@ -487,14 +550,32 @@
             <div class="info-item"><label>Término previsto</label><span>${fmtData(p.termino_previsto)}</span></div>
             <div class="info-item"><label>% Retenção</label><span>${p.perc_retencao ? p.perc_retencao + "%" : "—"}</span></div>
           </div>
-          <div style="border-top:1px solid var(--cor-borda);margin-top:14px;padding-top:14px;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:16px;">
-            <div class="info-item"><label>Valor do contrato</label><span>${fmtBRL(p.valor)}</span></div>
-            <div class="info-item"><label>Valor executado</label><span>${fmtBRL(totalExecutado)}</span></div>
-            <div class="info-item"><label>Valor medido</label><span>${fmtBRL(totalMedido)}</span></div>
-            <div class="info-item"><label>Valor faturado</label><span>${fmtBRL(totalFaturado)}</span></div>
-            <div class="info-item"><label>Teto Fat. Direto</label><span>${fmtBRL(p.valor_teto_fat_direto)}</span></div>
-            <div class="info-item"><label>Fat. Direto consumido</label><span>${fmtBRL(fatDiretoConsumido)}</span></div>
-            <div class="info-item"><label>Total retido</label><span>${fmtBRL(totalRetidoLiquido)}</span></div>
+          <div class="fin-painel">
+            <!-- Esquerda: contrato + barras -->
+            <div>
+              <div style="text-align:center;margin-bottom:6px;">
+                <div class="fin-titulo">Valor do Contrato</div>
+                <div class="fin-destaque">${fmtBRL(p.valor)}</div>
+              </div>
+              ${metricaBar("Valor Executado", totalExecutado,     num(p.valor))}
+              ${metricaBar("Valor Medido",    totalMedido,        num(p.valor))}
+              ${metricaBar("Valor Faturado",  totalFaturado,      num(p.valor))}
+              ${metricaBar("Valor Retido",    totalRetidoLiquido, num(p.valor))}
+            </div>
+            <!-- Direita: teto + gauge -->
+            <div class="fin-gauge-bloco">
+              <div class="fin-titulo">Teto Fat. Direto</div>
+              <div class="fin-destaque">${fmtBRL(tetoFatDireto)}</div>
+              ${gaugeSVG(pctGauge)}
+              <div style="margin-top:10px;">
+                <div class="fin-titulo" style="font-size:0.68rem;">Valor Faturamento Direto Consumido</div>
+                <div style="font-weight:600;font-size:1rem;">${fmtBRL(fatDiretoConsumido)}</div>
+              </div>
+              <div style="margin-top:10px;">
+                <div class="fin-titulo" style="font-size:0.68rem;">Saldo Faturamento Direto</div>
+                <div style="font-weight:600;font-size:1rem;color:${saldoFatDireto < 0 ? '#dc2626' : 'var(--cor-acento)'};">${fmtBRL(saldoFatDireto)}</div>
+              </div>
+            </div>
           </div>
           ${p.escopo_detalhado ? `
           <div style="margin-top:14px;border-top:1px solid var(--cor-borda);padding-top:12px;">
@@ -601,6 +682,42 @@
           <div id="lista-apontamentos"><div class="estado-msg">Carregando…</div></div>
         </div>
       `;
+    }
+
+    // Barra de proporção (valor / base do contrato)
+    function metricaBar(label, valor, base) {
+      const pct = base > 0 ? (valor / base * 100) : 0;
+      const w   = Math.max(0, Math.min(100, pct));
+      return `
+        <div class="fin-metrica">
+          <div>
+            <div class="mlabel">${label}</div>
+            <div class="mval">${fmtBRL(valor)}</div>
+          </div>
+          <div class="fin-bar-wrap"><div class="fin-bar" style="width:${w}%"></div></div>
+          <div class="fin-pct">${pct.toFixed(2)}%</div>
+        </div>`;
+    }
+
+    // Medidor semicircular de consumo do teto de fat. direto
+    function gaugeSVG(pct) {
+      const p   = Math.max(0, Math.min(100, pct)) / 100;
+      const cx = 100, cy = 100, r = 88;
+      const ang = Math.PI - p * Math.PI;            // 0% → 180° (esq.) · 100% → 0° (dir.)
+      const nx  = cx + (r - 14) * Math.cos(ang);
+      const ny  = cy - (r - 14) * Math.sin(ang);
+      const over = pct > 100;
+      const cor  = over ? "#dc2626" : "var(--cor-acento)";
+      return `
+        <svg viewBox="0 0 200 124" width="100%" style="max-width:230px;display:block;margin:6px auto 0;">
+          <path d="M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy} Z" fill="#D6E4F7"/>
+          <line x1="${cx}" y1="${cy}" x2="${nx.toFixed(1)}" y2="${ny.toFixed(1)}"
+                stroke="${cor}" stroke-width="3.5" stroke-linecap="round"/>
+          <circle cx="${cx}" cy="${cy}" r="6" fill="${cor}"/>
+          <text x="${cx - r}" y="${cy + 17}" font-size="11" fill="#6b7280" text-anchor="start">0%</text>
+          <text x="${cx + r}" y="${cy + 17}" font-size="11" fill="#6b7280" text-anchor="end">100%</text>
+          <text x="${cx}" y="${cy - 14}" font-size="20" font-weight="700" fill="${cor}" text-anchor="middle">${pct.toFixed(1)}%</text>
+        </svg>`;
     }
 
     function renderItens() {
