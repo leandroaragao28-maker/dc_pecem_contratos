@@ -6,56 +6,69 @@
   <title>Medição — DC Pecém</title>
   <link rel="stylesheet" href="style.css">
   <style>
-    /* Tabela BM — scroll horizontal em telas pequenas */
-    .bm-wrap { overflow-x: auto; }
-    .bm-table { width: 100%; border-collapse: collapse; font-size: 0.84rem; white-space: nowrap; }
-    .bm-table th {
-      background: var(--cor-fundo);
-      padding: 8px 10px;
-      border: 1px solid var(--cor-borda);
-      text-align: center;
-      font-weight: 600;
-      color: var(--cor-texto-m);
-      font-size: 0.78rem;
-    }
-    .bm-table td {
-      padding: 7px 10px;
-      border: 1px solid var(--cor-borda);
-      vertical-align: middle;
-    }
-    .bm-table tr:nth-child(even) td { background: #fafafa; }
-    .bm-table .col-num  { text-align: right; }
-    .bm-table .col-item { font-weight: 600; text-align: center; }
-    .bm-table input[type="number"] {
-      width: 90px;
-      padding: 5px 8px;
-      text-align: right;
-      border: 1px solid var(--cor-borda);
-      border-radius: 4px;
-      font-size: 0.84rem;
-    }
-    .bm-table input[type="number"]:focus {
-      border-color: var(--cor-primaria);
-      outline: none;
-    }
-    .bm-table tfoot td {
-      background: var(--cor-fundo);
-      font-weight: 600;
-      border: 1px solid var(--cor-borda);
-      padding: 8px 10px;
-    }
-    .pct-bar { display: flex; align-items: center; gap: 6px; min-width: 100px; }
-    .pct-bar .barra-wrap { flex: 1; }
-    .pct-bar span { font-size: 0.78rem; color: var(--cor-texto-m); min-width: 36px; text-align: right; }
+    /* ── Summary bar ──────────────────────────────────────── */
+    .bm-sumario { background:#fff; border:1px solid var(--cor-borda); border-radius:var(--raio); padding:14px 0; margin-bottom:16px; display:flex; align-items:center; overflow-x:auto; }
+    .bm-info-item { display:flex; align-items:center; gap:10px; padding:4px 20px; border-right:1px solid var(--cor-borda); flex-shrink:0; color:var(--cor-texto-m); }
+    .bm-info-item:last-of-type { border-right:2px solid var(--cor-borda); }
+    .bm-info-label { font-size:0.63rem; color:var(--cor-texto-m); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px; }
+    .bm-info-val { font-size:0.88rem; font-weight:600; color:var(--cor-texto); }
+    .bm-val-card { display:flex; align-items:center; gap:10px; padding:10px 18px; border-radius:8px; margin-left:10px; flex-shrink:0; }
+    .bm-val-card:first-of-type { margin-left:14px; }
+    .bm-val-blue   { background:#EFF6FF; }
+    .bm-val-green  { background:#F0FDF4; }
+    .bm-val-purple { background:#F5F3FF; }
+    .bm-val-icon { width:34px; height:34px; border-radius:8px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .bm-val-blue   .bm-val-icon { background:#DBEAFE; }
+    .bm-val-green  .bm-val-icon { background:#DCFCE7; }
+    .bm-val-purple .bm-val-icon { background:#EDE9FE; }
+    .bm-val-label { font-size:0.62rem; color:var(--cor-texto-m); text-transform:uppercase; letter-spacing:0.4px; margin-bottom:2px; }
+    .bm-val-num { font-size:0.9rem; font-weight:700; }
+    .bm-val-blue   .bm-val-num { color:#1d4ed8; }
+    .bm-val-green  .bm-val-num { color:#15803d; }
+    .bm-val-purple .bm-val-num { color:#6d28d9; }
+    .bm-val-pct { font-size:0.7rem; font-weight:600; margin-top:1px; }
+    .bm-val-green  .bm-val-pct { color:#16a34a; }
+    .bm-val-purple .bm-val-pct { color:#7c3aed; }
 
-    /* Grupo de cabeçalho de coluna */
-    .bm-table .grupo { background: var(--cor-primaria); color: white; text-align: center; }
-    .bm-table .grupo-alt { background: #0e7063; color: white; text-align: center; }
+    /* ── Table ────────────────────────────────────────────── */
+    .bm-wrap { overflow-x:auto; }
+    .bm-table { width:100%; border-collapse:collapse; font-size:0.83rem; white-space:nowrap; }
+    .bm-table th { background:var(--cor-fundo); padding:7px 10px; border:1px solid var(--cor-borda); text-align:center; font-weight:600; color:var(--cor-texto-m); font-size:0.72rem; text-transform:uppercase; letter-spacing:0.3px; }
+    .bm-table td { padding:6px 10px; border:1px solid var(--cor-borda); vertical-align:middle; }
+    .bm-table tr:nth-child(even) td { background:#fafafa; }
+    .bm-table tr:hover td { background:#EDF2FA; }
+    .bm-table .col-num  { text-align:right; font-variant-numeric:tabular-nums; }
+    .bm-table .col-item { font-weight:700; text-align:center; color:var(--cor-primaria); }
+    .bm-table .grupo     { background:var(--cor-primaria); color:#fff; text-align:center; }
+    .bm-table .grupo-alt { background:#0e7063; color:#fff; text-align:center; }
+    .bm-table tfoot td { background:var(--cor-fundo); font-weight:600; border:1px solid var(--cor-borda); padding:7px 10px; }
+    .bm-table input[type="number"] { width:86px; padding:4px 7px; text-align:right; border:1px solid var(--cor-borda); border-radius:4px; font-size:0.83rem; }
+    .bm-table input[type="number"]:focus { border-color:var(--cor-primaria); outline:none; }
+    .pct-cell { display:flex; align-items:center; gap:6px; min-width:110px; }
+    .pct-cell .barra-wrap { flex:1; }
+    .pct-cell span { font-size:0.72rem; color:var(--cor-texto-m); min-width:44px; text-align:right; }
+
+    /* ── Pagination ───────────────────────────────────────── */
+    .paginacao { display:flex; align-items:center; justify-content:space-between; padding:10px 16px; border-top:1px solid var(--cor-borda); flex-wrap:wrap; gap:8px; }
+    .pag-info  { font-size:0.77rem; color:var(--cor-texto-m); }
+    .pag-btns  { display:flex; gap:3px; align-items:center; }
+    .pag-btn   { width:30px; height:30px; border:1px solid var(--cor-borda); background:#fff; border-radius:5px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center; justify-content:center; font-family:inherit; transition:border-color .12s, color .12s; }
+    .pag-btn.ativo  { background:var(--cor-primaria); color:#fff; border-color:var(--cor-primaria); font-weight:600; }
+    .pag-btn:hover:not(.ativo):not(:disabled) { border-color:var(--cor-acento); color:var(--cor-acento); }
+    .pag-btn:disabled { opacity:.4; cursor:default; }
+    .pag-per-pag { display:flex; align-items:center; gap:7px; font-size:0.77rem; color:var(--cor-texto-m); }
+    .pag-per-pag select { font-size:0.77rem; padding:3px 7px; border:1px solid var(--cor-borda); border-radius:5px; }
 
     @media print {
-      nav, header .btn, #barra-acoes, .btn { display: none !important; }
-      body { background: white; }
-      .card { border: none; padding: 0; }
+      nav, header .btn, #barra-acoes, .btn, .paginacao { display:none !important; }
+      body { background:white; }
+      .card { border:none; padding:0; }
+      .bm-sumario { border:none; }
+    }
+    @media (max-width:700px) {
+      .bm-sumario { flex-wrap:wrap; }
+      .bm-info-item { min-width:calc(50% - 1px); border-bottom:1px solid var(--cor-borda); }
+      .bm-val-card { min-width:calc(50% - 1px); }
     }
   </style>
   <link rel="manifest" href="manifest.json">
@@ -78,9 +91,18 @@
       <h1 id="titulo-header">Medição</h1>
     </div>
     <div class="flex gap-8" id="barra-acoes" style="display:none!important;">
-      <button class="btn" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:white;" onclick="window.print()">🖨️ Imprimir</button>
-      <button class="btn" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:white;" onclick="abrirModalEditar()">Editar BM</button>
-      <button class="btn btn-primario" style="background:white;color:var(--cor-primaria);font-weight:600;" onclick="salvarQuantidades()" id="btn-salvar">Salvar quantidades</button>
+      <button class="btn" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:white;display:flex;align-items:center;gap:6px;" onclick="window.print()">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="1" width="10" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="2" y="6" width="12" height="7" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="5" y="10" width="6" height="3" rx="0.5" fill="currentColor" stroke="none"/><circle cx="12" cy="9" r="0.8" fill="currentColor"/></svg>
+        Imprimir
+      </button>
+      <button class="btn" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:white;display:flex;align-items:center;gap:6px;" onclick="abrirModalEditar()">
+        <svg width="13" height="13" viewBox="0 0 16 16" fill="none"><path d="M11.5 2.5a1.5 1.5 0 0 1 2.12 2.12l-8.5 8.5L2 14l.88-3.12 8.62-8.38z" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        Editar BM
+      </button>
+      <button class="btn btn-primario" style="background:white;color:var(--cor-primaria);font-weight:600;display:flex;align-items:center;gap:6px;" onclick="salvarQuantidades()" id="btn-salvar">
+        <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="2" y="2" width="12" height="12" rx="1.5" stroke="currentColor" stroke-width="1.4"/><rect x="5" y="2" width="6" height="4" rx="0.5" fill="currentColor" stroke="none"/><rect x="4" y="9" width="8" height="4" rx="0.5" stroke="currentColor" stroke-width="1.2"/></svg>
+        Salvar quantidades
+      </button>
     </div>
   </header>
 
@@ -109,7 +131,7 @@
           </div>
           <div class="form-grupo">
             <label>Período (MM/AAAA)</label>
-            <input type="text" id="fb-periodo" required maxlength="7">
+            <input type="text" id="fb-periodo" required maxlength="7" placeholder="03/2026">
           </div>
           <div class="form-grupo" style="grid-column:1/-1;">
             <label>Status</label>
@@ -137,7 +159,10 @@
     const medicaoId = params.get("id");
     if (!medicaoId) location.href = "pedidos.html";
 
-    let dadosBM = null;  // { medicao, itens, medicaoItens, acumuladoAnterior }
+    let dadosBM = null;
+    let qtdPeriodoAtual = {};  // item_id → qtd (mantém valores de todas as páginas)
+    let paginaAtual     = 1;
+    let itensPorPagina  = 10;
 
     const BADGES_BM = {
       "em elaboração": "badge badge-ag",
@@ -145,13 +170,18 @@
       "faturada":      "badge badge-ok",
     };
 
-    // ── Carregamento ───────────────────────────────────────
     carregarBM();
 
     async function carregarBM() {
       try {
         const res = await API.medicao(medicaoId);
         dadosBM = res;
+        // Inicializa mapa de quantidades
+        qtdPeriodoAtual = {};
+        (dadosBM.medicaoItens || []).forEach(mi => {
+          qtdPeriodoAtual[String(mi.item_id)] = Number(mi.qtd_medida) || 0;
+        });
+        paginaAtual = 1;
         renderBM();
       } catch (e) {
         document.getElementById("main-conteudo").innerHTML =
@@ -159,97 +189,108 @@
       }
     }
 
-    // ── Render ─────────────────────────────────────────────
+    // ── SVG icons ──────────────────────────────────────────
+    const iCal    = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="3" width="13" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="5.5" y1="1" x2="5.5" y2="5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="10.5" y1="1" x2="10.5" y2="5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="7.5" x2="14.5" y2="7.5" stroke="currentColor" stroke-width="1.1"/></svg>`;
+    const iDoc    = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="1.5" width="9" height="13" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="5.5" y1="6" x2="10" y2="6" stroke="currentColor" stroke-width="1.2"/><line x1="5.5" y1="8.5" x2="8.5" y2="8.5" stroke="currentColor" stroke-width="1.2"/></svg>`;
+    const iBox    = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M1.5 5L8 2l6.5 3-6.5 3L1.5 5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M1.5 5v6l6.5 3 6.5-3V5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><line x1="8" y1="8" x2="8" y2="14" stroke="currentColor" stroke-width="1.4"/></svg>`;
+    const iDollar = `<svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6.5" stroke="#2563EB" stroke-width="1.4"/><path d="M8 4.5v7M6 6.5c0-1.1.9-2 2-2s2 .9 2 2-1.8 1.5-2 1.5c-1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2" stroke="#2563EB" stroke-width="1.3" stroke-linecap="round"/></svg>`;
+    const iChart  = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><polyline points="1.5,13.5 5,8 9,10.5 14.5,3" stroke="#16a34a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+    const iClock  = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="6" stroke="#7c3aed" stroke-width="1.4"/><polyline points="8,5 8,8 10.5,8" stroke="#7c3aed" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+
+    // ── Render principal ───────────────────────────────────
     function renderBM() {
-      const { medicao, itens, medicaoItens, acumuladoAnterior } = dadosBM;
+      const { medicao, itens, acumuladoAnterior } = dadosBM;
 
       document.title = `${medicao.num_bm} — ${fmtPeriodo(medicao.periodo)} — DC Pecém`;
       document.getElementById("titulo-header").innerHTML =
         `${esc(medicao.num_bm)} &nbsp;<span class="${BADGES_BM[medicao.status] || 'badge'}" style="font-size:0.75rem;vertical-align:middle;">${medicao.status}</span>`;
-      document.getElementById("link-pedido").href    = `pedido.html?id=${medicao.pedido_id}`;
+      document.getElementById("link-pedido").href        = `pedido.html?id=${medicao.pedido_id}`;
       document.getElementById("link-pedido").textContent = `Pedido #${medicao.pedido_id}`;
       document.getElementById("barra-acoes").style.cssText = "";
 
-      // Mapa item_id → qtd_medida neste BM
-      const qtdPeriodo = {};
-      (medicaoItens || []).forEach(mi => { qtdPeriodo[String(mi.item_id)] = Number(mi.qtd_medida) || 0; });
-
-      // Totais rodapé
+      // Calcula totais globais
       let totContrato = 0, totAnt = 0, totPer = 0, totAtual = 0, totSaldo = 0;
-
-      const linhas = itens.map(item => {
-        const id       = String(item.id);
-        const qtdC     = Number(item.qtd_contratada)  || 0;
-        const pu       = Number(item.preco_unitario)   || 0;
-        const ant      = Number(acumuladoAnterior[id]) || 0;
-        const per      = qtdPeriodo[id] || 0;
-        const atual    = ant + per;
-        const saldo    = qtdC - atual;
-        const pctAtual = qtdC > 0 ? (atual / qtdC) * 100 : 0;
-
+      itens.forEach(item => {
+        const id   = String(item.id);
+        const qtdC = Number(item.qtd_contratada) || 0;
+        const pu   = Number(item.preco_unitario)  || 0;
+        const ant  = Number(acumuladoAnterior[id]) || 0;
+        const per  = qtdPeriodoAtual[id] || 0;
         totContrato += qtdC * pu;
         totAnt      += ant  * pu;
         totPer      += per  * pu;
-        totAtual    += atual * pu;
-        totSaldo    += saldo * pu;
-
-        return `
-          <tr data-item-id="${id}">
-            <td class="col-item">${esc(item.num_item)}</td>
-            <td style="white-space:normal;min-width:200px;">${esc(item.descricao)}</td>
-            <td style="text-align:center;">${esc(item.unidade)}</td>
-            <td class="col-num">${fmtNum(qtdC)}</td>
-            <td class="col-num">${fmtBRL(pu)}</td>
-            <td class="col-num">${fmtBRL(qtdC * pu)}</td>
-            <td class="col-num">${fmtNum(ant)}</td>
-            <td class="col-num" style="background:#fef9ec;">
-              <input type="number" class="qtd-periodo" data-item-id="${id}"
-                     data-qtd-contratada="${qtdC}" data-anterior="${ant}" data-pu="${pu}"
-                     value="${per}" min="0" step="0.001" oninput="recalcularLinha(this)">
-            </td>
-            <td class="col-num" id="atual-${id}">${fmtNum(atual)}</td>
-            <td class="col-num" id="saldo-${id}">${fmtNum(saldo)}</td>
-            <td>
-              <div class="pct-bar">
-                <div class="barra-wrap"><div class="barra" id="barra-${id}" style="width:${Math.min(pctAtual,100).toFixed(1)}%"></div></div>
-                <span id="pct-${id}">${pctAtual.toFixed(1)}%</span>
-              </div>
-            </td>
-          </tr>`;
-      }).join("");
+        totAtual    += (ant + per) * pu;
+        totSaldo    += (qtdC - ant - per) * pu;
+      });
+      const pctAtual = totContrato > 0 ? (totAtual / totContrato * 100) : 0;
+      const pctSaldo = totContrato > 0 ? (totSaldo / totContrato * 100) : 0;
 
       document.getElementById("main-conteudo").innerHTML = `
-        <div class="flex ai-center gap-12 mb-24" style="flex-wrap:wrap;">
-          <div class="txt-muted">Período: <strong>${fmtPeriodo(medicao.periodo)}</strong></div>
-          <div class="txt-muted">Pedido: <strong>#${medicao.pedido_id}</strong></div>
-          <div class="txt-muted">Itens: <strong>${itens.length}</strong></div>
+        <!-- Barra de resumo -->
+        <div class="bm-sumario">
+          <div class="bm-info-item">
+            ${iCal}
+            <div><div class="bm-info-label">Período</div><div class="bm-info-val">${fmtPeriodo(medicao.periodo)}</div></div>
+          </div>
+          <div class="bm-info-item">
+            ${iDoc}
+            <div><div class="bm-info-label">Pedido</div><div class="bm-info-val">#${medicao.pedido_id}</div></div>
+          </div>
+          <div class="bm-info-item" style="border-right:2px solid var(--cor-borda);">
+            ${iBox}
+            <div><div class="bm-info-label">Itens</div><div class="bm-info-val">${itens.length}</div></div>
+          </div>
+          <div class="bm-val-card bm-val-blue">
+            <div class="bm-val-icon">${iDollar}</div>
+            <div>
+              <div class="bm-val-label">Valor do BM</div>
+              <div class="bm-val-num" id="card-periodo">${fmtBRL(totPer)}</div>
+            </div>
+          </div>
+          <div class="bm-val-card bm-val-green">
+            <div class="bm-val-icon">${iChart}</div>
+            <div>
+              <div class="bm-val-label">Acumulado medido</div>
+              <div class="bm-val-num" id="card-acumulado">${fmtBRL(totAtual)}</div>
+              <div class="bm-val-pct" id="card-acumulado-pct">${pctAtual.toFixed(2)}%</div>
+            </div>
+          </div>
+          <div class="bm-val-card bm-val-purple">
+            <div class="bm-val-icon">${iClock}</div>
+            <div>
+              <div class="bm-val-label">Saldo a medir</div>
+              <div class="bm-val-num" id="card-saldo">${fmtBRL(totSaldo)}</div>
+              <div class="bm-val-pct" id="card-saldo-pct">${pctSaldo.toFixed(2)}%</div>
+            </div>
+          </div>
         </div>
 
+        <!-- Tabela -->
         <div class="card" style="padding:0;">
           <div class="bm-wrap">
             <table class="bm-table">
               <thead>
                 <tr>
-                  <th rowspan="2">Item</th>
-                  <th rowspan="2" style="min-width:200px;white-space:normal;">Descrição</th>
-                  <th rowspan="2">Und.</th>
-                  <th rowspan="2">Qtd.<br>Contrat.</th>
-                  <th rowspan="2">Preço<br>Unit. (R$)</th>
-                  <th rowspan="2">Total<br>Contrato</th>
+                  <th rowspan="2" style="width:48px;">Item</th>
+                  <th rowspan="2" style="min-width:180px;white-space:normal;text-align:left;">Descrição</th>
+                  <th rowspan="2" style="width:56px;">Und.</th>
+                  <th rowspan="2" style="width:76px;">Qtd.<br>Contrat.</th>
+                  <th rowspan="2" style="width:100px;">Preço<br>Unit. (R$)</th>
+                  <th rowspan="2" style="width:118px;">Total<br>Contrato</th>
                   <th class="grupo" colspan="4">Quantidades</th>
-                  <th rowspan="2" style="min-width:110px;">% Acumulado</th>
+                  <th rowspan="2" style="min-width:110px;">% Acum.</th>
                 </tr>
                 <tr>
-                  <th class="grupo">Acum.<br>Anterior</th>
-                  <th class="grupo-alt">Período</th>
-                  <th class="grupo">Acum.<br>Atual</th>
-                  <th class="grupo">Saldo<br>a Medir</th>
+                  <th class="grupo" style="width:86px;">Acum.<br>Anterior</th>
+                  <th class="grupo-alt" style="width:94px;">Período</th>
+                  <th class="grupo" style="width:86px;">Acum.<br>Atual</th>
+                  <th class="grupo" style="width:86px;">Saldo<br>a Medir</th>
                 </tr>
               </thead>
-              <tbody>${linhas}</tbody>
+              <tbody id="tbody-bm"></tbody>
               <tfoot>
                 <tr>
-                  <td colspan="5" style="text-align:right;">Totais (R$)</td>
+                  <td colspan="5" style="text-align:right;font-weight:600;">Totais (R$)</td>
                   <td class="col-num" id="tot-contrato">${fmtBRL(totContrato)}</td>
                   <td class="col-num" id="tot-ant">${fmtBRL(totAnt)}</td>
                   <td class="col-num" id="tot-per" style="background:#fef9ec;">${fmtBRL(totPer)}</td>
@@ -260,25 +301,90 @@
               </tfoot>
             </table>
           </div>
-        </div>
-
-        <div class="flex jc-between ai-center" style="margin-top:20px;flex-wrap:wrap;gap:12px;">
-          <div class="flex gap-12" style="flex-wrap:wrap;">
-            <div class="card" style="padding:12px 20px;min-width:160px;">
-              <div class="card-titulo">Valor do período</div>
-              <div class="card-valor" id="card-periodo" style="font-size:1.25rem;">${fmtBRL(totPer)}</div>
-            </div>
-            <div class="card" style="padding:12px 20px;min-width:160px;">
-              <div class="card-titulo">Acumulado total</div>
-              <div class="card-valor" id="card-acumulado" style="font-size:1.25rem;">${fmtBRL(totAtual)}</div>
-            </div>
-            <div class="card" style="padding:12px 20px;min-width:160px;">
-              <div class="card-titulo">Saldo a medir</div>
-              <div class="card-valor" id="card-saldo" style="font-size:1.25rem;">${fmtBRL(totSaldo)}</div>
-            </div>
-          </div>
-          <button class="btn btn-primario" onclick="salvarQuantidades()" style="padding:10px 24px;">Salvar quantidades</button>
+          <div class="paginacao" id="paginacao-bm"></div>
         </div>`;
+
+      renderLinhasBM();
+    }
+
+    // ── Renderiza linhas da página atual ───────────────────
+    function renderLinhasBM() {
+      const { itens, acumuladoAnterior } = dadosBM;
+      const total     = itens.length;
+      const totalPags = Math.max(1, Math.ceil(total / itensPorPagina));
+      if (paginaAtual > totalPags) paginaAtual = totalPags;
+      const inicio    = (paginaAtual - 1) * itensPorPagina;
+      const fim       = Math.min(inicio + itensPorPagina, total);
+
+      document.getElementById("tbody-bm").innerHTML = itens.slice(inicio, fim).map(item => {
+        const id    = String(item.id);
+        const qtdC  = Number(item.qtd_contratada) || 0;
+        const pu    = Number(item.preco_unitario)  || 0;
+        const ant   = Number(acumuladoAnterior[id]) || 0;
+        const per   = qtdPeriodoAtual[id] || 0;
+        const atual = ant + per;
+        const saldo = qtdC - atual;
+        const pct   = qtdC > 0 ? (atual / qtdC) * 100 : 0;
+        const w     = Math.min(pct, 100).toFixed(1);
+        return `
+          <tr data-item-id="${id}">
+            <td class="col-item">${esc(item.num_item)}</td>
+            <td style="white-space:normal;min-width:180px;">${esc(item.descricao)}</td>
+            <td style="text-align:center;color:var(--cor-texto-m);">${esc(item.unidade)}</td>
+            <td class="col-num">${fmtNum(qtdC)}</td>
+            <td class="col-num">${fmtBRL(pu)}</td>
+            <td class="col-num">${fmtBRL(qtdC * pu)}</td>
+            <td class="col-num">${fmtNum(ant)}</td>
+            <td class="col-num" style="background:#fef9ec;padding:4px 6px;">
+              <input type="number" class="qtd-periodo" data-item-id="${id}"
+                     data-qtd-contratada="${qtdC}" data-anterior="${ant}" data-pu="${pu}"
+                     value="${per}" min="0" step="0.001" oninput="recalcularLinha(this)">
+            </td>
+            <td class="col-num" id="atual-${id}">${fmtNum(atual)}</td>
+            <td class="col-num" id="saldo-${id}">${fmtNum(saldo)}</td>
+            <td>
+              <div class="pct-cell">
+                <div class="barra-wrap"><div class="barra" id="barra-${id}" style="width:${w}%"></div></div>
+                <span id="pct-${id}">${pct.toFixed(2)}%</span>
+              </div>
+            </td>
+          </tr>`;
+      }).join("");
+
+      // Paginação
+      const btns = [];
+      btns.push(`<button class="pag-btn" onclick="irPagBM(${paginaAtual-1})" ${paginaAtual===1?"disabled":""}>&lsaquo;</button>`);
+      for (let p = 1; p <= totalPags; p++) {
+        if (totalPags <= 7 || p === 1 || p === totalPags || Math.abs(p - paginaAtual) <= 1) {
+          btns.push(`<button class="pag-btn ${p===paginaAtual?'ativo':''}" onclick="irPagBM(${p})">${p}</button>`);
+        } else if (Math.abs(p - paginaAtual) === 2) {
+          btns.push(`<span style="padding:0 2px;color:var(--cor-texto-m);font-size:0.8rem;">…</span>`);
+        }
+      }
+      btns.push(`<button class="pag-btn" onclick="irPagBM(${paginaAtual+1})" ${paginaAtual===totalPags?"disabled":""}>&rsaquo;</button>`);
+
+      document.getElementById("paginacao-bm").innerHTML = `
+        <span class="pag-info">Exibindo ${inicio+1} a ${fim} de ${total} itens</span>
+        <div class="pag-btns">${btns.join("")}</div>
+        <div class="pag-per-pag">
+          Itens por página
+          <select onchange="mudarItensPorPag(this.value)">
+            ${[5,10,20,50].map(n=>`<option value="${n}" ${n===itensPorPagina?"selected":""}>${n}</option>`).join("")}
+          </select>
+        </div>`;
+    }
+
+    function irPagBM(pag) {
+      const total = Math.ceil(dadosBM.itens.length / itensPorPagina);
+      if (pag < 1 || pag > total) return;
+      paginaAtual = pag;
+      renderLinhasBM();
+    }
+
+    function mudarItensPorPag(val) {
+      itensPorPagina = parseInt(val);
+      paginaAtual    = 1;
+      renderLinhasBM();
     }
 
     // ── Recalcular linha ao digitar ────────────────────────
@@ -288,37 +394,48 @@
       const ant   = Number(input.dataset.anterior)      || 0;
       const pu    = Number(input.dataset.pu)            || 0;
       const per   = Number(input.value)                 || 0;
+
+      qtdPeriodoAtual[id] = per;
+
       const atual = ant + per;
       const saldo = qtdC - atual;
       const pct   = qtdC > 0 ? (atual / qtdC) * 100 : 0;
 
       document.getElementById(`atual-${id}`).textContent = fmtNum(atual);
       document.getElementById(`saldo-${id}`).textContent = fmtNum(saldo);
-      document.getElementById(`barra-${id}`).style.width = Math.min(pct, 100).toFixed(1) + "%";
-      document.getElementById(`pct-${id}`).textContent   = pct.toFixed(1) + "%";
+      document.getElementById(`barra-${id}`).style.width = Math.min(pct,100).toFixed(1) + "%";
+      document.getElementById(`pct-${id}`).textContent   = pct.toFixed(2) + "%";
 
       atualizarTotais();
     }
 
     function atualizarTotais() {
-      let totPer = 0, totAtual = 0, totSaldo = 0;
-      document.querySelectorAll(".qtd-periodo").forEach(input => {
-        const ant  = Number(input.dataset.anterior)      || 0;
-        const pu   = Number(input.dataset.pu)            || 0;
-        const qtdC = Number(input.dataset.qtdContratada) || 0;
-        const per  = Number(input.value)                 || 0;
-        totPer   += per         * pu;
-        totAtual += (ant + per) * pu;
-        totSaldo += (qtdC - ant - per) * pu;
+      const { itens, acumuladoAnterior } = dadosBM;
+      let totContrato = 0, totAnt = 0, totPer = 0, totAtual = 0, totSaldo = 0;
+      itens.forEach(item => {
+        const id   = String(item.id);
+        const qtdC = Number(item.qtd_contratada) || 0;
+        const pu   = Number(item.preco_unitario)  || 0;
+        const ant  = Number(acumuladoAnterior[id]) || 0;
+        const per  = qtdPeriodoAtual[id] || 0;
+        totContrato += qtdC * pu;
+        totAnt      += ant  * pu;
+        totPer      += per  * pu;
+        totAtual    += (ant + per) * pu;
+        totSaldo    += (qtdC - ant - per) * pu;
       });
+      const pctAtual = totContrato > 0 ? (totAtual / totContrato * 100) : 0;
+      const pctSaldo = totContrato > 0 ? (totSaldo / totContrato * 100) : 0;
 
-      const fmt = v => fmtBRL(v);
-      document.getElementById("tot-per").textContent    = fmt(totPer);
-      document.getElementById("tot-atual").textContent  = fmt(totAtual);
-      document.getElementById("tot-saldo").textContent  = fmt(totSaldo);
-      document.getElementById("card-periodo").textContent   = fmt(totPer);
-      document.getElementById("card-acumulado").textContent = fmt(totAtual);
-      document.getElementById("card-saldo").textContent     = fmt(totSaldo);
+      document.getElementById("tot-per").textContent    = fmtBRL(totPer);
+      document.getElementById("tot-atual").textContent  = fmtBRL(totAtual);
+      document.getElementById("tot-saldo").textContent  = fmtBRL(totSaldo);
+      document.getElementById("tot-ant").textContent    = fmtBRL(totAnt);
+      document.getElementById("card-periodo").textContent          = fmtBRL(totPer);
+      document.getElementById("card-acumulado").textContent        = fmtBRL(totAtual);
+      document.getElementById("card-acumulado-pct").textContent    = pctAtual.toFixed(2) + "%";
+      document.getElementById("card-saldo").textContent            = fmtBRL(totSaldo);
+      document.getElementById("card-saldo-pct").textContent        = pctSaldo.toFixed(2) + "%";
     }
 
     // ── Salvar quantidades ─────────────────────────────────
@@ -326,10 +443,9 @@
       const btn = document.getElementById("btn-salvar");
       if (btn) { btn.disabled = true; btn.textContent = "Salvando…"; }
       try {
-        const itens = [];
-        document.querySelectorAll(".qtd-periodo").forEach(input => {
-          itens.push({ item_id: input.dataset.itemId, qtd_medida: Number(input.value) || 0 });
-        });
+        const itens = Object.entries(qtdPeriodoAtual).map(([item_id, qtd_medida]) => ({
+          item_id, qtd_medida
+        }));
         await API.salvarMedicaoItens({ medicao_id: medicaoId, itens });
         await carregarBM();
       } catch (err) {
@@ -385,21 +501,21 @@
 
     // ── Utilitários ────────────────────────────────────────
     function fmtBRL(v) {
-      return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0);
+      return new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(Number(v)||0);
     }
     function fmtNum(v) {
-      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits: 3 }).format(Number(v) || 0);
+      return new Intl.NumberFormat("pt-BR", { maximumFractionDigits:3 }).format(Number(v)||0);
     }
     function fmtPeriodo(v) {
       if (!v) return "—";
       const s = String(v).trim();
       if (/^\d{2}\/\d{4}$/.test(s)) return s;
       const d = new Date(s);
-      if (!isNaN(d)) return String(d.getUTCMonth() + 1).padStart(2, "0") + "/" + d.getUTCFullYear();
+      if (!isNaN(d)) return String(d.getUTCMonth()+1).padStart(2,"0") + "/" + d.getUTCFullYear();
       return s;
     }
     function esc(s) {
-      return String(s || "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+      return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
     }
   </script>
   <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');</script>
