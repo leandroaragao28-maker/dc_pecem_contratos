@@ -458,7 +458,7 @@
       document.getElementById("s3-log").innerHTML = "";
       adicionarLog(`Iniciando importação de ${registros.length} registro(s)…`);
 
-      const LOTE = 20;
+      const LOTE = 8;
       const lotes = [];
       for (let i = 0; i < registros.length; i += LOTE) lotes.push(registros.slice(i, i + LOTE));
 
