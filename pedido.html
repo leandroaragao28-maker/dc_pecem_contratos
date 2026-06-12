@@ -1617,6 +1617,7 @@
 
     // ── Apontamentos de Produção ───────────────────────────
     let apontamentosList = [];
+    let _sincronizandoPerc = false;
 
     async function carregarApontamentos() {
       document.getElementById("lista-apontamentos").innerHTML = `<div class="estado-msg">Carregando…</div>`;
@@ -1624,9 +1625,46 @@
         const res = await API.apontamentos(pedidoId);
         apontamentosList = (res.dados || []).sort((a, b) => String(b.data).localeCompare(String(a.data)));
         renderApontamentos();
+        if (!_sincronizandoPerc) await _sincronizarPercExec();
       } catch (e) {
         document.getElementById("lista-apontamentos").innerHTML =
           `<div class="estado-msg" style="color:#dc2626;">Erro: ${e.message}</div>`;
+      }
+    }
+
+    // Sincroniza perc_executado dos itens com o acumulado nos apontamentos
+    async function _sincronizarPercExec() {
+      const itemIds = [...new Set(apontamentosList.map(a => String(a.item_id)))];
+      if (!itemIds.length) return;
+      let atualizado = false;
+      for (const itemId of itemIds) {
+        const item = itensAtuais.find(i => String(i.id) === itemId);
+        if (!item) continue;
+        const acumulado  = apQtdJaApontada(itemId);
+        const contratada = num(item.qtd_contratada);
+        const percExec   = contratada > 0
+          ? parseFloat((Math.min(100, acumulado / contratada * 100)).toFixed(6))
+          : 0;
+        if (Math.abs(num(item.perc_executado) - percExec) < 0.0001) continue;
+        await API.salvarItem({
+          id:             item.id,
+          pedido_id:      pedidoId,
+          num_item:       item.num_item,
+          descricao:      item.descricao,
+          unidade:        item.unidade,
+          qtd_contratada: num(item.qtd_contratada),
+          preco_unitario: num(item.preco_unitario),
+          perc_executado: percExec,
+        });
+        item.perc_executado = percExec;
+        atualizado = true;
+      }
+      if (atualizado) {
+        _sincronizandoPerc = true;
+        await carregarPedido();
+        _sincronizandoPerc = false;
+        const tabBtn = document.querySelector(`.tab-btn[onclick*="'apontamentos'"]`);
+        if (tabBtn) trocarTab("apontamentos", tabBtn);
       }
     }
 
