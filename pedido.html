@@ -1745,21 +1745,35 @@
         });
 
         const hoje = new Date().toISOString().slice(0, 10);
-        const apontamentos = [];
+        const apontamentos    = [];
+        const itensAtualizar  = [];
         itens.forEach(item => {
           const acumulado = num(acumuladoTotal[String(item.id)]);
           if (acumulado <= 0) return;
           const contratada = num(item.qtd_contratada);
-          const perc = contratada > 0 ? (acumulado / contratada * 100) : 0;
+          const perc       = contratada > 0 ? Math.min(100, acumulado / contratada * 100) : 0;
+          const percArr    = Math.round(perc * 10) / 10;
           apontamentos.push({
             pedido_id:    pedidoId,
             item_id:      item.id,
             data:         hoje,
             responsavel:  pedidoAtual.responsavel || "",
             qtd_apontada: acumulado,
-            perc_avanco:  Math.round(perc * 10) / 10,
+            perc_avanco:  percArr,
             observacao:   "Atualizado conforme " + ultima.num_bm,
           });
+          if (num(item.perc_executado) !== percArr) {
+            itensAtualizar.push({
+              id:             item.id,
+              pedido_id:      pedidoId,
+              num_item:       item.num_item,
+              descricao:      item.descricao,
+              unidade:        item.unidade,
+              qtd_contratada: num(item.qtd_contratada),
+              preco_unitario: num(item.preco_unitario),
+              perc_executado: percArr,
+            });
+          }
         });
 
         if (!apontamentos.length) {
@@ -1767,12 +1781,25 @@
           return;
         }
 
-        const msg = `Serão criados ${apontamentos.length} apontamento(s) com base no acumulado medido até a ${ultima.num_bm}.\n\nContinuar?`;
+        const msg = `Serão criados ${apontamentos.length} apontamento(s) e atualizado(s) ${itensAtualizar.length} item(ns) com o % executado acumulado até a ${ultima.num_bm}.\n\nContinuar?`;
         if (!confirm(msg)) return;
 
         let salvos = 0, falhas = 0;
+        const totalOps = apontamentos.length + itensAtualizar.length;
+
+        for (const it of itensAtualizar) {
+          btn.textContent = `Atualizando item ${salvos + falhas + 1}/${totalOps}…`;
+          try {
+            await API.salvarItem(it);
+            salvos++;
+          } catch (err) {
+            falhas++;
+            console.error("Falha ao atualizar item", it, err);
+          }
+        }
+
         for (const ap of apontamentos) {
-          btn.textContent = `Salvando ${salvos + falhas + 1}/${apontamentos.length}…`;
+          btn.textContent = `Salvando apontamento ${salvos + falhas + 1}/${totalOps}…`;
           try {
             await API.saveApontamento(ap);
             salvos++;
@@ -1782,9 +1809,11 @@
           }
         }
 
-        await carregarApontamentos();
-        alert(`Concluído. ${salvos} apontamento(s) criado(s)` +
-              (falhas ? `, ${falhas} falha(s).` : "."));
+        await carregarPedido();
+        const tabBtn = document.querySelector(`.tab-btn[onclick*="'apontamentos'"]`);
+        if (tabBtn) trocarTab("apontamentos", tabBtn);
+        alert(`Concluído. ${apontamentos.length} apontamento(s) e ${itensAtualizar.length} item(ns) processados` +
+              (falhas ? ` — ${falhas} falha(s).` : "."));
       } catch (err) {
         alert("Erro: " + err.message);
       } finally {
