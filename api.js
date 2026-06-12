@@ -28,6 +28,33 @@ async function api(acao, params = {}, corpo = null) {
   return data;
 }
 
+// POST sem corpo na URL — usado para payloads grandes (importações)
+// Content-Type text/plain evita preflight CORS no Apps Script
+async function apiPost(acao, params = {}, corpo = null) {
+  const url = new URL(CONFIG.API_URL);
+  url.searchParams.set("token", getToken());
+  url.searchParams.set("acao", acao);
+  Object.entries(params).forEach(([k, v]) => url.searchParams.set(k, v));
+  url.searchParams.set("_t", Date.now());
+
+  const res  = await fetch(url.toString(), {
+    method: "POST",
+    cache:  "no-store",
+    headers: { "Content-Type": "text/plain" },
+    body: corpo ? JSON.stringify(corpo) : "{}",
+  });
+  const data = await res.json();
+
+  if (data.erro === "Token inválido") {
+    clearToken();
+    location.href = "login.html";
+    return null;
+  }
+
+  if (!data.ok) throw new Error(data.erro || "Erro desconhecido na API");
+  return data;
+}
+
 // Atalhos por entidade
 const API = {
   dashboard:      ()         => api("getDashboard"),
@@ -51,10 +78,10 @@ const API = {
   salvarFaturamento: (d)         => api("saveFaturamento", {}, d),
   excluirFaturamento:(id)        => api("deleteFaturamento", { id }),
 
-  importarPedidos:      (dados) => api("importarPedidos",      {}, { dados }),
-  importarItens:        (dados) => api("importarItens",        {}, { dados }),
-  importarMedicoes:     (dados) => api("importarMedicoes",     {}, { dados }),
-  importarMedicaoItens: (dados) => api("importarMedicaoItens", {}, { dados }),
+  importarPedidos:      (dados) => apiPost("importarPedidos",      {}, { dados }),
+  importarItens:        (dados) => apiPost("importarItens",        {}, { dados }),
+  importarMedicoes:     (dados) => apiPost("importarMedicoes",     {}, { dados }),
+  importarMedicaoItens: (dados) => apiPost("importarMedicaoItens", {}, { dados }),
 
   fatDireto:         (pedido_id) => api("getFatDireto",       { pedido_id }),
   allFatDireto:      ()          => api("getAllFatDireto"),
