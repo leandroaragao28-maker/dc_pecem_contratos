@@ -1732,38 +1732,42 @@
           String(b.num_bm).localeCompare(String(a.num_bm))
         )[0];
 
-        btn.textContent = "Carregando itens da " + ultima.num_bm + "…";
-        const resMI = await API.medicaoItens(ultima.id);
-        const medicaoItens = resMI.dados || [];
-        if (!medicaoItens.length) {
-          alert(`A medição ${ultima.num_bm} não tem itens lançados.`);
-          return;
-        }
+        btn.textContent = "Carregando " + ultima.num_bm + "…";
+        const resMed = await API.medicao(ultima.id);
+        const itens              = resMed.itens         || itensAtuais;
+        const medicaoItens       = resMed.medicaoItens  || [];
+        const acumuladoAnterior  = resMed.acumuladoAnterior || {};
 
-        const apontamentos = [];
-        const ignorados    = [];
+        const acumuladoTotal = { ...acumuladoAnterior };
         medicaoItens.forEach(mi => {
-          const item = itensAtuais.find(i => String(i.id) === String(mi.item_id));
-          if (!item) { ignorados.push("item_id " + mi.item_id); return; }
-          const perc = num(item.perc_executado);
-          const qtd  = num(item.qtd_contratada) * perc / 100;
+          const k = String(mi.item_id);
+          acumuladoTotal[k] = num(acumuladoTotal[k]) + num(mi.qtd_medida);
+        });
+
+        const hoje = new Date().toISOString().slice(0, 10);
+        const apontamentos = [];
+        itens.forEach(item => {
+          const acumulado = num(acumuladoTotal[String(item.id)]);
+          if (acumulado <= 0) return;
+          const contratada = num(item.qtd_contratada);
+          const perc = contratada > 0 ? (acumulado / contratada * 100) : 0;
           apontamentos.push({
             pedido_id:    pedidoId,
             item_id:      item.id,
-            data:         new Date().toISOString().slice(0, 10),
+            data:         hoje,
             responsavel:  pedidoAtual.responsavel || "",
-            qtd_apontada: qtd,
-            perc_avanco:  perc,
+            qtd_apontada: acumulado,
+            perc_avanco:  Math.round(perc * 10) / 10,
             observacao:   "Atualizado conforme " + ultima.num_bm,
           });
         });
 
         if (!apontamentos.length) {
-          alert(`Nenhum item da ${ultima.num_bm} pôde ser convertido em apontamento.`);
+          alert(`Nenhum item com quantidade medida acumulada na ${ultima.num_bm}.`);
           return;
         }
 
-        const msg = `Serão criados ${apontamentos.length} apontamento(s) a partir da ${ultima.num_bm}, usando o % executado dos itens.\n\nContinuar?`;
+        const msg = `Serão criados ${apontamentos.length} apontamento(s) com base no acumulado medido até a ${ultima.num_bm}.\n\nContinuar?`;
         if (!confirm(msg)) return;
 
         let salvos = 0, falhas = 0;
