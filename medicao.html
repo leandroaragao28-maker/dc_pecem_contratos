@@ -192,6 +192,7 @@
     }
 
     // ── SVG icons ──────────────────────────────────────────
+    const iHash   = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M5.5 2.5v11M10.5 2.5v11M2 5.5h12M2 10.5h12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>`;
     const iCal    = `<svg width="15" height="15" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="3" width="13" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="5.5" y1="1" x2="5.5" y2="5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="10.5" y1="1" x2="10.5" y2="5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><line x1="1.5" y1="7.5" x2="14.5" y2="7.5" stroke="currentColor" stroke-width="1.1"/></svg>`;
     const iDoc    = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="1.5" width="9" height="13" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="5.5" y1="6" x2="10" y2="6" stroke="currentColor" stroke-width="1.2"/><line x1="5.5" y1="8.5" x2="8.5" y2="8.5" stroke="currentColor" stroke-width="1.2"/></svg>`;
     const iBox    = `<svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M1.5 5L8 2l6.5 3-6.5 3L1.5 5z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><path d="M1.5 5v6l6.5 3 6.5-3V5" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><line x1="8" y1="8" x2="8" y2="14" stroke="currentColor" stroke-width="1.4"/></svg>`;
@@ -231,6 +232,10 @@
       document.getElementById("main-conteudo").innerHTML = `
         <!-- Barra de resumo -->
         <div class="bm-sumario">
+          <div class="bm-info-item">
+            ${iHash}
+            <div><div class="bm-info-label">BM</div><div class="bm-info-val">${esc(medicao.num_bm)}</div></div>
+          </div>
           <div class="bm-info-item">
             ${iCal}
             <div><div class="bm-info-label">Período</div><div class="bm-info-val">${fmtPeriodo(medicao.periodo)}</div></div>
