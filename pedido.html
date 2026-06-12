@@ -815,8 +815,9 @@
       if (!itensAtuais.length) return `<div class="estado-msg">Nenhum item cadastrado. Clique em "+ Novo item" para começar.</div>`;
 
       const linhas = itensAtuais.map(i => {
-        const total = Number(i.qtd_contratada) * Number(i.preco_unitario);
-        const exec  = Number(i.perc_executado) || 0;
+        const total     = Number(i.qtd_contratada) * Number(i.preco_unitario);
+        const exec      = Number(i.perc_executado) || 0;
+        const valorExec = total * exec / 100;
         return `
           <tr>
             <td><strong>${esc(i.num_item)}</strong></td>
@@ -831,6 +832,7 @@
                 <span class="txt-muted" style="min-width:36px;font-size:0.82rem;">${parseFloat(exec.toFixed(2))}%</span>
               </div>
             </td>
+            <td class="num">${exec > 0 ? fmtBRL(valorExec) : '<span class="txt-muted">—</span>'}</td>
             <td class="txt-direita">
               <div style="display:flex;gap:4px;justify-content:flex-end;">
                 <button class="btn-icon" onclick="abrirModalEditarItem(${i.id})" title="Editar">${iEdit}</button>
@@ -852,6 +854,7 @@
                 <th class="num" style="width:110px;">Preço unit.</th>
                 <th class="num" style="width:120px;">Total</th>
                 <th style="width:140px;">% Executado</th>
+                <th class="num" style="width:130px;">Vl. Executado</th>
                 <th style="width:80px;"></th>
               </tr>
             </thead>
