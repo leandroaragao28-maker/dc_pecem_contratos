@@ -738,7 +738,10 @@
         <div class="tab-painel" id="tab-apontamentos">
           <div class="flex jc-between ai-center mb-16">
             <span class="txt-muted" id="resumo-apontamentos"></span>
-            <button class="btn btn-primario btn-sm" onclick="abrirModalApontamento()">+ Registrar apontamento</button>
+            <div class="flex gap-8">
+              <button class="btn btn-secundario btn-sm" onclick="atualizarApontamentosConformeMedicao()" id="btn-atualizar-medicao">↻ Atualizar conforme medição</button>
+              <button class="btn btn-primario btn-sm" onclick="abrirModalApontamento()">+ Registrar apontamento</button>
+            </div>
           </div>
           <div id="lista-apontamentos"><div class="estado-msg">Carregando…</div></div>
         </div>
@@ -1711,6 +1714,78 @@
         await carregarApontamentos();
       } catch (err) {
         alert("Erro ao excluir: " + err.message);
+      }
+    }
+
+    async function atualizarApontamentosConformeMedicao() {
+      const btn = document.getElementById("btn-atualizar-medicao");
+      const textoOriginal = btn.textContent;
+      btn.disabled = true;
+      try {
+        if (!medicoesList.length) await carregarMedicoes();
+        if (!medicoesList.length) {
+          alert("Não há medições cadastradas neste pedido.");
+          return;
+        }
+
+        const ultima = medicoesList.slice().sort((a, b) =>
+          String(b.num_bm).localeCompare(String(a.num_bm))
+        )[0];
+
+        btn.textContent = "Carregando itens da " + ultima.num_bm + "…";
+        const resMI = await API.medicaoItens(ultima.id);
+        const medicaoItens = resMI.dados || [];
+        if (!medicaoItens.length) {
+          alert(`A medição ${ultima.num_bm} não tem itens lançados.`);
+          return;
+        }
+
+        const apontamentos = [];
+        const ignorados    = [];
+        medicaoItens.forEach(mi => {
+          const item = itensAtuais.find(i => String(i.id) === String(mi.item_id));
+          if (!item) { ignorados.push("item_id " + mi.item_id); return; }
+          const perc = num(item.perc_executado);
+          const qtd  = num(item.qtd_contratada) * perc / 100;
+          apontamentos.push({
+            pedido_id:    pedidoId,
+            item_id:      item.id,
+            data:         new Date().toISOString().slice(0, 10),
+            responsavel:  pedidoAtual.responsavel || "",
+            qtd_apontada: qtd,
+            perc_avanco:  perc,
+            observacao:   "Atualizado conforme " + ultima.num_bm,
+          });
+        });
+
+        if (!apontamentos.length) {
+          alert(`Nenhum item da ${ultima.num_bm} pôde ser convertido em apontamento.`);
+          return;
+        }
+
+        const msg = `Serão criados ${apontamentos.length} apontamento(s) a partir da ${ultima.num_bm}, usando o % executado dos itens.\n\nContinuar?`;
+        if (!confirm(msg)) return;
+
+        let salvos = 0, falhas = 0;
+        for (const ap of apontamentos) {
+          btn.textContent = `Salvando ${salvos + falhas + 1}/${apontamentos.length}…`;
+          try {
+            await API.saveApontamento(ap);
+            salvos++;
+          } catch (err) {
+            falhas++;
+            console.error("Falha ao salvar apontamento", ap, err);
+          }
+        }
+
+        await carregarApontamentos();
+        alert(`Concluído. ${salvos} apontamento(s) criado(s)` +
+              (falhas ? `, ${falhas} falha(s).` : "."));
+      } catch (err) {
+        alert("Erro: " + err.message);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = textoOriginal;
       }
     }
 
