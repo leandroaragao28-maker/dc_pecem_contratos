@@ -484,6 +484,9 @@
             <label>% Avanço</label>
             <input type="number" id="ap-perc" min="0" max="100" step="0.1" placeholder="0,0">
           </div>
+          <div id="ap-erro-saldo" style="grid-column:1/-1;display:none;color:#dc2626;font-size:0.85rem;background:#fef2f2;border:1px solid #fecaca;border-radius:6px;padding:8px 12px;">
+            ⚠️ <span id="ap-erro-saldo-msg"></span>
+          </div>
           <div class="form-grupo" style="grid-column:1/-1;">
             <label>Observação</label>
             <textarea id="ap-obs" rows="3" placeholder="Ocorrências, impedimentos, desvios…"></textarea>
@@ -1682,6 +1685,9 @@
       document.getElementById("ap-perc").value       = "";
       document.getElementById("ap-obs").value        = "";
       document.getElementById("ap-info-item").style.display = "none";
+      document.getElementById("ap-erro-saldo").style.display = "none";
+      document.getElementById("ap-qtd").style.borderColor    = "";
+      document.getElementById("btn-salvar-ap").disabled      = false;
       document.getElementById("modal-ap-titulo").textContent = "Registrar Apontamento";
       document.getElementById("modal-apontamento").classList.add("aberto");
     }
@@ -1701,7 +1707,7 @@
     function apAtualizarInfoItem() {
       const it    = apItemSelecionado();
       const info  = document.getElementById("ap-info-item");
-      if (!it) { info.style.display = "none"; return; }
+      if (!it) { info.style.display = "none"; apValidarSaldo(); return; }
       const contratada = num(it.qtd_contratada);
       const apontada   = apQtdJaApontada(it.id);
       const saldo      = contratada - apontada;
@@ -1712,32 +1718,65 @@
       saldoEl.textContent = `${fmtNum(saldo)} ${u}`;
       saldoEl.style.color = saldo < 0 ? "#dc2626" : "var(--cor-acento)";
       info.style.display = "";
+      apValidarSaldo();
+    }
+
+    function apValidarSaldo() {
+      const erroEl = document.getElementById("ap-erro-saldo");
+      const erroMsg = document.getElementById("ap-erro-saldo-msg");
+      const qtdInput = document.getElementById("ap-qtd");
+      const btn = document.getElementById("btn-salvar-ap");
+      const it = apItemSelecionado();
+      if (!it) {
+        erroEl.style.display = "none";
+        qtdInput.style.borderColor = "";
+        btn.disabled = false;
+        return true;
+      }
+      const contratada = num(it.qtd_contratada);
+      const apontada   = apQtdJaApontada(it.id);
+      const saldo      = contratada - apontada;
+      const qtd        = num(qtdInput.value);
+      if (qtd > saldo) {
+        const excedente = qtd - saldo;
+        erroMsg.textContent = `Quantidade excede o saldo em ${fmtNum(excedente)} ${it.unidade || ""}. Saldo disponível: ${fmtNum(saldo)} ${it.unidade || ""}.`;
+        erroEl.style.display = "";
+        qtdInput.style.borderColor = "#dc2626";
+        btn.disabled = true;
+        return false;
+      }
+      erroEl.style.display = "none";
+      qtdInput.style.borderColor = "";
+      btn.disabled = false;
+      return true;
     }
 
     let apSincronizando = false;
     function apQtdParaPerc() {
-      if (apSincronizando) return;
+      if (apSincronizando) { apValidarSaldo(); return; }
       const it = apItemSelecionado();
-      if (!it) return;
+      if (!it) { apValidarSaldo(); return; }
       const contratada = num(it.qtd_contratada);
-      if (contratada <= 0) return;
+      if (contratada <= 0) { apValidarSaldo(); return; }
       const qtd = num(document.getElementById("ap-qtd").value);
       const perc = Math.min(100, qtd / contratada * 100);
       apSincronizando = true;
       document.getElementById("ap-perc").value = Math.round(perc * 10) / 10;
       apSincronizando = false;
+      apValidarSaldo();
     }
     function apPercParaQtd() {
-      if (apSincronizando) return;
+      if (apSincronizando) { apValidarSaldo(); return; }
       const it = apItemSelecionado();
-      if (!it) return;
+      if (!it) { apValidarSaldo(); return; }
       const contratada = num(it.qtd_contratada);
-      if (contratada <= 0) return;
+      if (contratada <= 0) { apValidarSaldo(); return; }
       const perc = num(document.getElementById("ap-perc").value);
       const qtd  = contratada * perc / 100;
       apSincronizando = true;
       document.getElementById("ap-qtd").value = Math.round(qtd * 1000) / 1000;
       apSincronizando = false;
+      apValidarSaldo();
     }
 
     document.getElementById("ap-item-id").addEventListener("change", () => {
@@ -1756,6 +1795,10 @@
 
     async function salvarApontamentoModal(e) {
       e.preventDefault();
+      if (!apValidarSaldo()) {
+        alert("Quantidade excede o saldo disponível para este item. Ajuste antes de salvar.");
+        return;
+      }
       const btn = document.getElementById("btn-salvar-ap");
       btn.disabled = true; btn.textContent = "Salvando…";
       try {
