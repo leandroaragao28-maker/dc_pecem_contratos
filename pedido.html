@@ -469,6 +469,13 @@
               <option value="">— Selecione o item —</option>
             </select>
           </div>
+          <div id="ap-info-item" style="grid-column:1/-1;display:none;background:#f3f6fa;border:1px solid #dde3eb;border-radius:6px;padding:8px 12px;font-size:0.85rem;">
+            <div style="display:flex;flex-wrap:wrap;gap:18px;">
+              <span><span class="txt-muted">Contratada:</span> <strong id="ap-info-contratada">—</strong></span>
+              <span><span class="txt-muted">Já apontada:</span> <strong id="ap-info-apontada">—</strong></span>
+              <span><span class="txt-muted">Saldo:</span> <strong id="ap-info-saldo">—</strong></span>
+            </div>
+          </div>
           <div class="form-grupo">
             <label>Quantidade executada</label>
             <input type="number" id="ap-qtd" min="0" step="0.001" placeholder="0,000">
@@ -1674,9 +1681,74 @@
       document.getElementById("ap-qtd").value        = "";
       document.getElementById("ap-perc").value       = "";
       document.getElementById("ap-obs").value        = "";
+      document.getElementById("ap-info-item").style.display = "none";
       document.getElementById("modal-ap-titulo").textContent = "Registrar Apontamento";
       document.getElementById("modal-apontamento").classList.add("aberto");
     }
+
+    function apItemSelecionado() {
+      const id = document.getElementById("ap-item-id").value;
+      const it = itensAtuais.find(x => String(x.id) === String(id));
+      return it || null;
+    }
+
+    function apQtdJaApontada(itemId) {
+      return apontamentosList
+        .filter(a => String(a.item_id) === String(itemId))
+        .reduce((s, a) => s + num(a.qtd_apontada), 0);
+    }
+
+    function apAtualizarInfoItem() {
+      const it    = apItemSelecionado();
+      const info  = document.getElementById("ap-info-item");
+      if (!it) { info.style.display = "none"; return; }
+      const contratada = num(it.qtd_contratada);
+      const apontada   = apQtdJaApontada(it.id);
+      const saldo      = contratada - apontada;
+      const u          = it.unidade || "";
+      document.getElementById("ap-info-contratada").textContent = `${fmtNum(contratada)} ${u}`;
+      document.getElementById("ap-info-apontada").textContent   = `${fmtNum(apontada)} ${u}`;
+      const saldoEl = document.getElementById("ap-info-saldo");
+      saldoEl.textContent = `${fmtNum(saldo)} ${u}`;
+      saldoEl.style.color = saldo < 0 ? "#dc2626" : "var(--cor-acento)";
+      info.style.display = "";
+    }
+
+    let apSincronizando = false;
+    function apQtdParaPerc() {
+      if (apSincronizando) return;
+      const it = apItemSelecionado();
+      if (!it) return;
+      const contratada = num(it.qtd_contratada);
+      if (contratada <= 0) return;
+      const qtd = num(document.getElementById("ap-qtd").value);
+      const perc = Math.min(100, qtd / contratada * 100);
+      apSincronizando = true;
+      document.getElementById("ap-perc").value = Math.round(perc * 10) / 10;
+      apSincronizando = false;
+    }
+    function apPercParaQtd() {
+      if (apSincronizando) return;
+      const it = apItemSelecionado();
+      if (!it) return;
+      const contratada = num(it.qtd_contratada);
+      if (contratada <= 0) return;
+      const perc = num(document.getElementById("ap-perc").value);
+      const qtd  = contratada * perc / 100;
+      apSincronizando = true;
+      document.getElementById("ap-qtd").value = Math.round(qtd * 1000) / 1000;
+      apSincronizando = false;
+    }
+
+    document.getElementById("ap-item-id").addEventListener("change", () => {
+      apAtualizarInfoItem();
+      const qtd  = document.getElementById("ap-qtd").value;
+      const perc = document.getElementById("ap-perc").value;
+      if (qtd && !perc)      apQtdParaPerc();
+      else if (perc && !qtd) apPercParaQtd();
+    });
+    document.getElementById("ap-qtd").addEventListener("input", apQtdParaPerc);
+    document.getElementById("ap-perc").addEventListener("input", apPercParaQtd);
 
     function fecharModalApontamento() {
       document.getElementById("modal-apontamento").classList.remove("aberto");
