@@ -1784,36 +1784,46 @@
         const msg = `Serão criados ${apontamentos.length} apontamento(s) e atualizado(s) ${itensAtualizar.length} item(ns) com o % executado acumulado até a ${ultima.num_bm}.\n\nContinuar?`;
         if (!confirm(msg)) return;
 
-        let salvos = 0, falhas = 0;
+        let itensSalvos = 0, itensFalha = 0;
+        let apSalvos    = 0, apFalha    = 0;
+        const errosItens = [];
         const totalOps = apontamentos.length + itensAtualizar.length;
 
+        console.log("[atualizarConformeMedicao] Itens a atualizar:", itensAtualizar);
+        console.log("[atualizarConformeMedicao] Apontamentos a criar:", apontamentos);
+
         for (const it of itensAtualizar) {
-          btn.textContent = `Atualizando item ${salvos + falhas + 1}/${totalOps}…`;
+          btn.textContent = `Atualizando item ${itensSalvos + itensFalha + 1}/${itensAtualizar.length}…`;
           try {
-            await API.salvarItem(it);
-            salvos++;
+            const r = await API.salvarItem(it);
+            console.log("[salvarItem OK]", it.id, "→ perc_executado=" + it.perc_executado, r);
+            itensSalvos++;
           } catch (err) {
-            falhas++;
-            console.error("Falha ao atualizar item", it, err);
+            itensFalha++;
+            errosItens.push(`item id=${it.id}: ${err.message}`);
+            console.error("[salvarItem FALHA]", it, err);
           }
         }
 
         for (const ap of apontamentos) {
-          btn.textContent = `Salvando apontamento ${salvos + falhas + 1}/${totalOps}…`;
+          btn.textContent = `Salvando apontamento ${apSalvos + apFalha + 1}/${apontamentos.length}…`;
           try {
             await API.saveApontamento(ap);
-            salvos++;
+            apSalvos++;
           } catch (err) {
-            falhas++;
-            console.error("Falha ao salvar apontamento", ap, err);
+            apFalha++;
+            console.error("[saveApontamento FALHA]", ap, err);
           }
         }
 
         await carregarPedido();
         const tabBtn = document.querySelector(`.tab-btn[onclick*="'apontamentos'"]`);
         if (tabBtn) trocarTab("apontamentos", tabBtn);
-        alert(`Concluído. ${apontamentos.length} apontamento(s) e ${itensAtualizar.length} item(ns) processados` +
-              (falhas ? ` — ${falhas} falha(s).` : "."));
+
+        let resumo = `Apontamentos: ${apSalvos} criado(s)` + (apFalha ? `, ${apFalha} falha(s)` : "") + ".\n";
+        resumo += `Itens atualizados: ${itensSalvos} de ${itensAtualizar.length}` + (itensFalha ? ` — ${itensFalha} falha(s)` : "") + ".";
+        if (errosItens.length) resumo += "\n\nErros nos itens:\n" + errosItens.slice(0, 5).join("\n");
+        alert(resumo);
       } catch (err) {
         alert("Erro: " + err.message);
       } finally {
