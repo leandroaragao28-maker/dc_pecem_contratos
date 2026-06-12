@@ -1867,7 +1867,8 @@
           if (acumulado <= 0) return;
           const contratada = num(item.qtd_contratada);
           const perc       = contratada > 0 ? Math.min(100, acumulado / contratada * 100) : 0;
-          const percArr    = Math.round(perc * 10) / 10;
+          const percArr    = Math.round(perc * 10) / 10;          // 1 decimal p/ exibição
+          const percExec   = parseFloat(perc.toFixed(6));         // precisão total p/ cálculo financeiro
           apontamentos.push({
             pedido_id:    pedidoId,
             item_id:      item.id,
@@ -1877,7 +1878,7 @@
             perc_avanco:  percArr,
             observacao:   "Atualizado conforme " + ultima.num_bm,
           });
-          if (num(item.perc_executado) !== percArr) {
+          if (num(item.perc_executado) !== percExec) {
             itensAtualizar.push({
               id:             item.id,
               pedido_id:      pedidoId,
@@ -1886,7 +1887,7 @@
               unidade:        item.unidade,
               qtd_contratada: num(item.qtd_contratada),
               preco_unitario: num(item.preco_unitario),
-              perc_executado: percArr,
+              perc_executado: percExec,
             });
           }
         });
