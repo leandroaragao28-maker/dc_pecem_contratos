@@ -928,6 +928,12 @@
       document.getElementById("form-item").reset();
       document.getElementById("fi-id").value = "";
       document.getElementById("fi-exec").value = "0";
+      // próximo número sequencial
+      const maxNum = itensAtuais.reduce((max, i) => {
+        const n = parseInt(i.num_item, 10);
+        return isNaN(n) ? max : Math.max(max, n);
+      }, 0);
+      document.getElementById("fi-num").value = maxNum + 1;
       document.getElementById("modal-item").classList.add("aberto");
     }
 
