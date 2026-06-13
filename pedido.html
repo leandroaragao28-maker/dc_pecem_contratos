@@ -1746,10 +1746,7 @@
     }
 
     function abrirModalApontamentoItem(itemId) {
-      const tabBtn = document.querySelector(`.tab-btn[onclick*="'apontamentos'"]`);
-      if (tabBtn) trocarTab("apontamentos", tabBtn);
-      // pequeno delay para garantir que a aba carregou antes de abrir o modal
-      setTimeout(() => abrirModalApontamento(itemId), 150);
+      abrirModalApontamento(itemId);
     }
 
     function apItemSelecionado() {
