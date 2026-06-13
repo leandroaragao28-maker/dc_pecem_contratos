@@ -88,6 +88,8 @@ const API = {
   saveFatDireto:     (d)         => api("saveFatDireto",       {}, d),
   deleteFatDireto:   (id)        => api("deleteFatDireto",     { id }),
 
+  mapaMensal:        (ano)       => api("getMapaMensal",       { ano: ano || "" }),
+
   apontamentos:      (pedido_id) => api("getApontamentos",     { pedido_id }),
   saveApontamento:   (d)         => api("saveApontamento",     {}, d),
   deleteApontamento: (id)        => api("deleteApontamento",   { id }),

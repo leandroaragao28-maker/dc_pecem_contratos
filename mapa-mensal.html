@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mapa Mensal — DC Pecém</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .brand-logo { width:30px;height:30px;background:white;color:var(--cor-primaria);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;letter-spacing:-0.5px;font-family:Georgia,serif;flex-shrink:0; }
+    nav a { display:inline-flex;align-items:center;gap:7px; }
+    nav a svg { flex-shrink:0;opacity:0.85; }
+
+    .page-titulo { font-size:1.2rem;font-weight:700;color:var(--cor-primaria);margin-bottom:3px; }
+    .page-titulo + hr { border:none;border-top:2px solid var(--cor-acento);width:32px;margin:0 0 14px; }
+    .subtitulo { font-size:0.78rem;color:var(--cor-texto-m);margin-top:-10px;margin-bottom:14px; }
+
+    .barra-acoes { display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px; }
+    .barra-acoes label { font-size:0.78rem;color:var(--cor-texto-m);margin-right:6px; }
+    .barra-acoes select { padding:5px 8px;font-size:0.85rem;font-family:inherit;border:1px solid var(--cor-borda);border-radius:5px;background:white;cursor:pointer; }
+
+    .mapa-card { background:white;border:1px solid var(--cor-borda);border-radius:var(--raio-lg);box-shadow:var(--sombra);overflow:hidden; }
+    .mapa-scroll { overflow-x:auto; }
+    .mapa-tbl { border-collapse:separate;border-spacing:0;width:100%;font-size:0.78rem;white-space:nowrap; }
+    .mapa-tbl thead th { background:#F1EFE8;font-weight:600;color:#2C2C2A;padding:8px 9px;text-align:center;border-bottom:2px solid #B4B2A9;font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px; }
+    .mapa-tbl thead th.l { text-align:left; }
+    .mapa-tbl thead th.r { text-align:right; }
+    .mapa-tbl thead th .sep { display:block;font-size:0.66rem;font-weight:400;color:var(--cor-texto-m);text-transform:none;letter-spacing:0;margin-top:2px; }
+    .mapa-tbl tbody td { padding:6px 9px;border-bottom:1px solid var(--cor-borda); }
+    .mapa-tbl tbody td.r { text-align:right; }
+    .mapa-tbl tbody td.c { text-align:center; }
+    .mapa-tbl tbody tr:hover td { background:#F8FAFC; }
+    .mapa-tbl tbody tr.linha-clk { cursor:pointer; }
+    .mapa-tbl .col-fix { background:white;position:sticky;left:0;z-index:1; }
+    .mapa-tbl tbody tr:hover .col-fix { background:#F8FAFC; }
+    .mapa-tbl .col-num { font-weight:600;color:var(--cor-primaria);font-size:0.78rem; }
+    .mapa-tbl .col-desc { max-width:280px;overflow:hidden;text-overflow:ellipsis; }
+    .mapa-tbl .col-fim { border-right:2px solid #B4B2A9; }
+    .mapa-tbl .saldo-pos { color:#0F6E56;font-weight:600; }
+    .mapa-tbl .saldo-zero { color:var(--cor-texto-m); }
+
+    .cel-faturada    { background:#E6F1FB;color:#042C53;cursor:pointer; }
+    .cel-aprovacao   { background:#FAEEDA;color:#412402;cursor:pointer; }
+    .cel-elaboracao  { background:#FCEBEB;color:#501313;cursor:pointer; }
+    .cel-faturada:hover, .cel-aprovacao:hover, .cel-elaboracao:hover { filter:brightness(0.95); }
+
+    .mapa-tbl tfoot td { padding:9px;font-weight:700;background:#F1EFE8;border-top:2px solid #B4B2A9;font-size:0.8rem; }
+    .mapa-tbl tfoot td.r { text-align:right; }
+    .mapa-tbl tfoot td.saldo { color:#0F6E56; }
+
+    .legenda { display:flex;gap:14px;margin-top:12px;font-size:0.76rem;align-items:center;flex-wrap:wrap; }
+    .legenda > span:first-child { color:var(--cor-texto-m); }
+    .legenda .leg { display:inline-flex;align-items:center;gap:6px; }
+    .legenda .leg span:first-child { width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,0.08); }
+
+    .estado-msg { padding:24px;text-align:center;color:var(--cor-texto-m); }
+  </style>
+  <meta name="theme-color" content="#1E3A5F">
+</head>
+<body class="pagina">
+
+  <header>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="brand-logo">E</div>
+      <h1>DC Pecém — Contratos</h1>
+    </div>
+    <button onclick="carregar()" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:white;padding:7px 14px;border-radius:var(--raio);cursor:pointer;font-size:0.85rem;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M14 8a6 6 0 1 1-1.76-4.24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="14,2 14,5 11,5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Atualizar
+    </button>
+  </header>
+
+  <nav>
+    <a href="index.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9.5" y="1.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="1.5" y="9.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9.5" y="9.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
+      Dashboard
+    </a>
+    <a href="pedidos.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="1.5" width="9" height="13" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="5.5" y1="5.5" x2="9.5" y2="5.5" stroke="currentColor" stroke-width="1.2"/><line x1="5.5" y1="8" x2="9.5" y2="8" stroke="currentColor" stroke-width="1.2"/><line x1="5.5" y1="10.5" x2="8" y2="10.5" stroke="currentColor" stroke-width="1.2"/></svg>
+      Pedidos
+    </a>
+    <a href="avanco.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><polyline points="6,3 11,8 6,13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      Avançar
+    </a>
+    <a href="fat-direto.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="1.5" y1="7.5" x2="14.5" y2="7.5" stroke="currentColor" stroke-width="1.4"/></svg>
+      Fat. Direto
+    </a>
+    <a href="mapa-mensal.html" class="ativo">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="1.5" y1="6" x2="14.5" y2="6" stroke="currentColor" stroke-width="1.4"/><line x1="6" y1="6" x2="6" y2="13.5" stroke="currentColor" stroke-width="1.2"/><line x1="10" y1="6" x2="10" y2="13.5" stroke="currentColor" stroke-width="1.2"/></svg>
+      Mapa Mensal
+    </a>
+    <a href="importacao.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><polyline points="4,6 8,2 12,6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="8" y1="2" x2="8" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 12v1.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Importar
+    </a>
+    <a href="#" onclick="sair(event)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2.5H3.5A1.5 1.5 0 0 0 2 4v8a1.5 1.5 0 0 0 1.5 1.5H6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><polyline points="10,5 13.5,8 10,11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="13.5" y1="8" x2="6.5" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Sair
+    </a>
+  </nav>
+
+  <main>
+    <div class="page-titulo">Mapa Mensal</div><hr>
+
+    <div class="barra-acoes">
+      <div>
+        <label for="filtro-ano">Ano:</label>
+        <select id="filtro-ano" onchange="carregar()"></select>
+      </div>
+      <span id="resumo-info" class="txt-muted" style="font-size:0.78rem;"></span>
+    </div>
+
+    <div id="conteudo">
+      <div class="estado-msg">Carregando…</div>
+    </div>
+
+    <div class="legenda">
+      <span>Status do BM:</span>
+      <span class="leg"><span style="background:#E6F1FB;border-color:#B5D4F4;"></span>Faturada</span>
+      <span class="leg"><span style="background:#FAEEDA;border-color:#FAC775;"></span>Em aprovação</span>
+      <span class="leg"><span style="background:#FCEBEB;border-color:#F7C1C1;"></span>Em elaboração</span>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script>
+    if (!estaAutenticado()) location.href = "login.html";
+
+    const anoAtual = new Date().getFullYear();
+    const sel = document.getElementById("filtro-ano");
+    for (let a = anoAtual + 1; a >= 2024; a--) {
+      const opt = document.createElement("option");
+      opt.value = a; opt.textContent = a;
+      if (a === anoAtual) opt.selected = true;
+      sel.appendChild(opt);
+    }
+
+    carregar();
+
+    async function carregar() {
+      const el = document.getElementById("conteudo");
+      el.innerHTML = `<div class="estado-msg">Carregando…</div>`;
+      try {
+        const ano = sel.value;
+        const res = await API.mapaMensal(ano);
+        render(res);
+      } catch (e) {
+        el.innerHTML = `<div class="estado-msg" style="color:#dc2626;">Erro: ${esc(e.message)}</div>`;
+      }
+    }
+
+    function render({ ano, linhas, totais }) {
+      const meses = [];
+      for (let m = 1; m <= 12; m++) meses.push(String(m).padStart(2, "0") + "/" + ano);
+
+      // Só linhas que tenham pelo menos algo no ano ou que sejam pedido emitido/concluído
+      const linhasFiltradas = linhas.filter(r => {
+        if (Object.keys(r.meses).length > 0) return true;
+        return r.status === "pedido emitido" || r.status === "concluído";
+      });
+
+      document.getElementById("resumo-info").textContent =
+        `${linhasFiltradas.length} pedido(s) — ${fmtBRL(totais.valor)} contratado`;
+
+      if (!linhasFiltradas.length) {
+        document.getElementById("conteudo").innerHTML =
+          `<div class="mapa-card"><div class="estado-msg">Nenhum pedido com medição em ${ano}.</div></div>`;
+        return;
+      }
+
+      const cabecalhoMeses = meses.map(m => `<th class="r">${m}</th>`).join("");
+
+      const linhasHtml = linhasFiltradas.map(r => {
+        const celulas = meses.map(m => {
+          const med = r.meses[m];
+          if (!med || !med.valor) return `<td class="r"></td>`;
+          const cls = classeCelula(med.status);
+          return `<td class="r ${cls}" onclick="event.stopPropagation();abrirMedicao(${med.id});" title="${esc(med.num_bm || '')} — ${esc(med.status || '')}">${fmtBRL(med.valor)}</td>`;
+        }).join("");
+
+        const saldoCls = r.saldo > 0.5 ? "saldo-pos" : "saldo-zero";
+
+        return `
+          <tr class="linha-clk" onclick="abrirPedido(${r.id})">
+            <td class="col-fix col-num">#${esc(r.num_pedido_sap) || r.id}</td>
+            <td class="col-desc">${esc(r.descricao)}</td>
+            <td class="r">${fmtBRL(r.valor)}</td>
+            <td class="r">${fmtBRL(r.acumulado)}</td>
+            <td class="r col-fim ${saldoCls}">${fmtBRL(r.saldo)}</td>
+            ${celulas}
+          </tr>`;
+      }).join("");
+
+      const totaisCelulas = meses.map(m => {
+        const v = totais.porMes[m] || 0;
+        return `<td class="r">${v > 0 ? fmtBRL(v) : ""}</td>`;
+      }).join("");
+
+      document.getElementById("conteudo").innerHTML = `
+        <div class="mapa-card">
+          <div class="mapa-scroll">
+            <table class="mapa-tbl">
+              <thead>
+                <tr>
+                  <th class="l col-fix">Nº Pedido</th>
+                  <th class="l">Contrato / Serviço</th>
+                  <th class="r">Valor pedido</th>
+                  <th class="r">Acumulado</th>
+                  <th class="r col-fim">Saldo</th>
+                  ${cabecalhoMeses}
+                </tr>
+              </thead>
+              <tbody>${linhasHtml}</tbody>
+              <tfoot>
+                <tr>
+                  <td class="col-fix" colspan="2">TOTAL</td>
+                  <td class="r">${fmtBRL(totais.valor)}</td>
+                  <td class="r">${fmtBRL(totais.acumulado)}</td>
+                  <td class="r col-fim saldo">${fmtBRL(totais.saldo)}</td>
+                  ${totaisCelulas}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    function classeCelula(status) {
+      const s = (status || "").toLowerCase();
+      if (s.includes("faturada"))    return "cel-faturada";
+      if (s.includes("aprovação") || s.includes("aprovacao")) return "cel-aprovacao";
+      if (s.includes("elaboração") || s.includes("elaboracao")) return "cel-elaboracao";
+      return "";
+    }
+
+    function abrirPedido(id)   { location.href = `pedido.html?id=${id}`; }
+    function abrirMedicao(id)  { location.href = `medicao.html?id=${id}`; }
+
+    function sair(e) { e.preventDefault(); clearToken(); location.href = "login.html"; }
+    function fmtBRL(v) { return new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" }).format(Number(v) || 0); }
+    function esc(s) { return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+  </script>
+  <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');</script>
+</body>
+</html>
