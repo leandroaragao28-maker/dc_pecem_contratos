@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Relatórios — DC Pecém</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .brand-logo { width:30px;height:30px;background:white;color:var(--cor-primaria);border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:1.1rem;letter-spacing:-0.5px;font-family:Georgia,serif;flex-shrink:0; }
+    nav a { display:inline-flex;align-items:center;gap:7px; }
+    nav a svg { flex-shrink:0;opacity:0.85; }
+
+    .page-titulo { font-size:1.2rem;font-weight:700;color:var(--cor-primaria);margin-bottom:3px; }
+    .page-titulo + hr { border:none;border-top:2px solid var(--cor-acento);width:32px;margin:0 0 14px; }
+
+    /* ── Tab bar ── */
+    .rel-tabs { display:flex;gap:4px;border-bottom:2px solid var(--cor-borda);margin-bottom:18px; }
+    .rel-tab  { padding:8px 18px;font-size:0.84rem;font-weight:600;font-family:inherit;background:none;border:none;border-bottom:3px solid transparent;margin-bottom:-2px;cursor:pointer;color:var(--cor-texto-m);border-radius:0;transition:color .15s,border-color .15s; }
+    .rel-tab:hover { color:var(--cor-primaria); }
+    .rel-tab.ativo  { color:var(--cor-acento);border-bottom-color:var(--cor-acento); }
+
+    /* ── Barra de ações ── */
+    .barra-acoes { display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:10px;flex-wrap:wrap; }
+    .barra-acoes label { font-size:0.78rem;color:var(--cor-texto-m);margin-right:6px; }
+    .barra-acoes select { padding:5px 8px;font-size:0.85rem;font-family:inherit;border:1px solid var(--cor-borda);border-radius:5px;background:white;cursor:pointer; }
+    .barra-filtros { display:flex;align-items:center;gap:14px;flex-wrap:wrap; }
+
+    /* ── Tabela geral ── */
+    .rel-card   { background:white;border:1px solid var(--cor-borda);border-radius:var(--raio-lg);box-shadow:var(--sombra);overflow:hidden; }
+    .rel-scroll { overflow-x:auto; }
+    .rel-tbl    { border-collapse:separate;border-spacing:0;width:100%;font-size:0.78rem;white-space:nowrap; }
+    .rel-tbl thead th { background:#F1EFE8;font-weight:600;color:#2C2C2A;padding:8px 10px;border-bottom:2px solid #B4B2A9;font-size:0.73rem;text-transform:uppercase;letter-spacing:0.3px; }
+    .rel-tbl thead th.l { text-align:left; }
+    .rel-tbl thead th.r { text-align:right; }
+    .rel-tbl tbody td  { padding:7px 10px;border-bottom:1px solid var(--cor-borda);vertical-align:middle; }
+    .rel-tbl tbody td.r { text-align:right; }
+    .rel-tbl tbody td.c { text-align:center; }
+    .rel-tbl tbody tr:hover td { background:#F8FAFC; }
+    .rel-tbl tbody tr.linha-clk { cursor:pointer; }
+    .rel-tbl .col-fix  { background:white;position:sticky;left:0;z-index:1; }
+    .rel-tbl tbody tr:hover .col-fix { background:#F8FAFC; }
+    .rel-tbl .col-num  { font-weight:600;color:var(--cor-primaria); }
+    .rel-tbl .col-desc { max-width:260px;overflow:hidden;text-overflow:ellipsis; }
+    .rel-tbl tfoot td  { padding:9px 10px;font-weight:700;background:#F1EFE8;border-top:2px solid #B4B2A9;font-size:0.8rem; }
+    .rel-tbl tfoot td.r { text-align:right; }
+
+    /* barrinhas de progresso inline */
+    .mini-bar-wrap { width:70px;background:#e8edf2;border-radius:99px;height:5px;overflow:hidden;display:inline-block;vertical-align:middle;margin-right:5px; }
+    .mini-bar      { height:100%;border-radius:99px;background:var(--cor-acento); }
+    .mini-bar.prov { background:#f59e0b; }
+    .pct-txt       { font-size:0.72rem;color:var(--cor-texto-m); }
+    .pct-txt.prov  { color:#f59e0b;font-weight:600; }
+
+    /* badge provisório */
+    .badge-prov { display:inline-flex;align-items:center;gap:3px;font-size:0.64rem;font-weight:600;color:#b45309;background:#fef3c7;border:1px solid #fde68a;border-radius:4px;padding:1px 5px;margin-left:6px;vertical-align:middle; }
+
+    /* rodapé info */
+    .rel-footer { margin-top:10px;font-size:0.74rem;color:var(--cor-texto-m);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px; }
+    .rel-footer strong { color:var(--cor-primaria); }
+
+    /* ── Mapa mensal (reutilizado) ── */
+    .mapa-card { background:white;border:1px solid var(--cor-borda);border-radius:var(--raio-lg);box-shadow:var(--sombra);overflow:hidden; }
+    .mapa-scroll { overflow-x:auto; }
+    .mapa-tbl { border-collapse:separate;border-spacing:0;width:100%;font-size:0.78rem;white-space:nowrap; }
+    .mapa-tbl thead th { background:#F1EFE8;font-weight:600;color:#2C2C2A;padding:8px 9px;text-align:center;border-bottom:2px solid #B4B2A9;font-size:0.74rem;text-transform:uppercase;letter-spacing:0.3px; }
+    .mapa-tbl thead th.l { text-align:left; }
+    .mapa-tbl thead th.r { text-align:right; }
+    .mapa-tbl tbody td { padding:6px 9px;border-bottom:1px solid var(--cor-borda); }
+    .mapa-tbl tbody td.r { text-align:right; }
+    .mapa-tbl tbody tr:hover td { background:#F8FAFC; }
+    .mapa-tbl tbody tr.linha-clk { cursor:pointer; }
+    .mapa-tbl .col-fix { background:white;position:sticky;left:0;z-index:1; }
+    .mapa-tbl tbody tr:hover .col-fix { background:#F8FAFC; }
+    .mapa-tbl .col-num  { font-weight:600;color:var(--cor-primaria);font-size:0.78rem; }
+    .mapa-tbl .col-desc { max-width:280px;overflow:hidden;text-overflow:ellipsis; }
+    .mapa-tbl .col-fim  { border-right:2px solid #B4B2A9; }
+    .mapa-tbl .saldo-pos  { color:#0F6E56;font-weight:600; }
+    .mapa-tbl .saldo-zero { color:var(--cor-texto-m); }
+    .cel-faturada   { background:#E6F1FB;color:#042C53;cursor:pointer; }
+    .cel-aprovacao  { background:#FAEEDA;color:#412402;cursor:pointer; }
+    .cel-elaboracao { background:#FCEBEB;color:#501313;cursor:pointer; }
+    .cel-faturada:hover,.cel-aprovacao:hover,.cel-elaboracao:hover { filter:brightness(0.95); }
+    .mapa-tbl tfoot td { padding:9px;font-weight:700;background:#F1EFE8;border-top:2px solid #B4B2A9;font-size:0.8rem; }
+    .mapa-tbl tfoot td.r { text-align:right; }
+    .mapa-tbl tfoot td.saldo { color:#0F6E56; }
+    .legenda { display:flex;gap:14px;margin-top:12px;font-size:0.76rem;align-items:center;flex-wrap:wrap; }
+    .legenda > span:first-child { color:var(--cor-texto-m); }
+    .legenda .leg { display:inline-flex;align-items:center;gap:6px; }
+    .legenda .leg span:first-child { width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,0.08); }
+
+    .estado-msg { padding:24px;text-align:center;color:var(--cor-texto-m); }
+
+    @media(max-width:700px){
+      .rel-tabs { overflow-x:auto; }
+      .barra-acoes { flex-direction:column;align-items:flex-start; }
+    }
+  </style>
+  <meta name="theme-color" content="#1E3A5F">
+</head>
+<body class="pagina">
+
+  <header>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div class="brand-logo">E</div>
+      <h1>DC Pecém — Contratos</h1>
+    </div>
+    <button onclick="atualizar()" style="background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:white;padding:7px 14px;border-radius:var(--raio);cursor:pointer;font-size:0.85rem;font-family:inherit;display:inline-flex;align-items:center;gap:6px;">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M14 8a6 6 0 1 1-1.76-4.24" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><polyline points="14,2 14,5 11,5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      Atualizar
+    </button>
+  </header>
+
+  <nav>
+    <a href="index.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9.5" y="1.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="1.5" y="9.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/><rect x="9.5" y="9.5" width="5" height="5" rx="1" stroke="currentColor" stroke-width="1.4"/></svg>
+      Dashboard
+    </a>
+    <a href="pedidos.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="3" y="1.5" width="9" height="13" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="5.5" y1="5.5" x2="9.5" y2="5.5" stroke="currentColor" stroke-width="1.2"/><line x1="5.5" y1="8" x2="9.5" y2="8" stroke="currentColor" stroke-width="1.2"/><line x1="5.5" y1="10.5" x2="8" y2="10.5" stroke="currentColor" stroke-width="1.2"/></svg>
+      Pedidos
+    </a>
+    <a href="avanco.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><polyline points="6,3 11,8 6,13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+      Avançar
+    </a>
+    <a href="fat-direto.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="4" width="13" height="9" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="1.5" y1="7.5" x2="14.5" y2="7.5" stroke="currentColor" stroke-width="1.4"/></svg>
+      Fat. Direto
+    </a>
+    <a href="relatorios.html" class="ativo">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><rect x="1.5" y="1.5" width="13" height="13" rx="1.5" stroke="currentColor" stroke-width="1.4"/><line x1="4.5" y1="5.5" x2="11.5" y2="5.5" stroke="currentColor" stroke-width="1.2"/><line x1="4.5" y1="8" x2="11.5" y2="8" stroke="currentColor" stroke-width="1.2"/><line x1="4.5" y1="10.5" x2="8.5" y2="10.5" stroke="currentColor" stroke-width="1.2"/></svg>
+      Relatórios
+    </a>
+    <a href="importacao.html">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><polyline points="4,6 8,2 12,6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="8" y1="2" x2="8" y2="11" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><path d="M2 12v1.5A1.5 1.5 0 0 0 3.5 15h9a1.5 1.5 0 0 0 1.5-1.5V12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Importar
+    </a>
+    <a href="#" onclick="sair(event)">
+      <svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M6 2.5H3.5A1.5 1.5 0 0 0 2 4v8a1.5 1.5 0 0 0 1.5 1.5H6" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><polyline points="10,5 13.5,8 10,11" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round" fill="none"/><line x1="13.5" y1="8" x2="6.5" y2="8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/></svg>
+      Sair
+    </a>
+  </nav>
+
+  <main>
+    <div class="page-titulo">Relatórios</div><hr>
+
+    <div class="rel-tabs">
+      <button class="rel-tab ativo" onclick="trocarAba('executado', this)">Executado por Contrato</button>
+      <button class="rel-tab"       onclick="trocarAba('mapa',      this)">Mapa Mensal de BMs</button>
+    </div>
+
+    <!-- ── Aba 1: Executado por Contrato ── -->
+    <div id="aba-executado">
+      <div class="barra-acoes">
+        <div class="barra-filtros">
+          <div>
+            <label for="filtro-status">Status:</label>
+            <select id="filtro-status" onchange="renderExec()">
+              <option value="">Todos</option>
+              <option value="em negociação">Em negociação</option>
+              <option value="aguardando pedido">Aguardando pedido</option>
+              <option value="pedido emitido">Pedido emitido</option>
+              <option value="concluído">Concluído</option>
+            </select>
+          </div>
+          <div>
+            <label for="filtro-resp">Responsável:</label>
+            <select id="filtro-resp" onchange="renderExec()">
+              <option value="">Todos</option>
+            </select>
+          </div>
+        </div>
+        <span id="exec-info" class="txt-muted" style="font-size:0.78rem;"></span>
+      </div>
+      <div id="cont-executado"><div class="estado-msg">Carregando…</div></div>
+    </div>
+
+    <!-- ── Aba 2: Mapa Mensal ── -->
+    <div id="aba-mapa" style="display:none;">
+      <div class="barra-acoes">
+        <div class="barra-filtros">
+          <div>
+            <label for="filtro-ano">Ano:</label>
+            <select id="filtro-ano" onchange="carregarMapa()"></select>
+          </div>
+        </div>
+        <span id="mapa-info" class="txt-muted" style="font-size:0.78rem;"></span>
+      </div>
+      <div id="cont-mapa"><div class="estado-msg">Carregando…</div></div>
+      <div class="legenda">
+        <span>Status do BM:</span>
+        <span class="leg"><span style="background:#E6F1FB;border-color:#B5D4F4;"></span>Faturada</span>
+        <span class="leg"><span style="background:#FAEEDA;border-color:#FAC775;"></span>Em aprovação</span>
+        <span class="leg"><span style="background:#FCEBEB;border-color:#F7C1C1;"></span>Em elaboração</span>
+      </div>
+    </div>
+  </main>
+
+  <script src="config.js"></script>
+  <script src="api.js"></script>
+  <script>
+    if (!estaAutenticado()) location.href = "login.html";
+
+    // ── estado ──────────────────────────────────────────────
+    let _pedidos      = [];
+    let _abaAtiva     = "executado";
+    let _mapaCarregou = false;
+
+    // ── inicialização ────────────────────────────────────────
+    const anoAtual = new Date().getFullYear();
+    const selAno   = document.getElementById("filtro-ano");
+    for (let a = anoAtual + 1; a >= 2024; a--) {
+      const opt = document.createElement("option");
+      opt.value = a; opt.textContent = a;
+      if (a === anoAtual) opt.selected = true;
+      selAno.appendChild(opt);
+    }
+
+    carregarExec();
+
+    // ── utilitários ──────────────────────────────────────────
+    function num(v)  { return parseFloat(String(v).replace(",", ".")) || 0; }
+    function esc(s)  { return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+    function fmtBRL(v) { return new Intl.NumberFormat("pt-BR", { style:"currency", currency:"BRL" }).format(Number(v) || 0); }
+    function fmtPct(v) { return (Number(v) || 0).toFixed(1) + "%"; }
+
+    function sair(e) { e.preventDefault(); clearToken(); location.href = "login.html"; }
+
+    function atualizar() {
+      if (_abaAtiva === "executado") { _pedidos = []; carregarExec(); }
+      else { carregarMapa(); }
+    }
+
+    // ── troca de aba ────────────────────────────────────────
+    function trocarAba(aba, btn) {
+      _abaAtiva = aba;
+      document.querySelectorAll(".rel-tab").forEach(b => b.classList.remove("ativo"));
+      btn.classList.add("ativo");
+      document.getElementById("aba-executado").style.display = aba === "executado" ? "" : "none";
+      document.getElementById("aba-mapa").style.display      = aba === "mapa"      ? "" : "none";
+      if (aba === "mapa" && !_mapaCarregou) carregarMapa();
+    }
+
+    // ════════════════════════════════════════════════════════
+    // ABA 1 — EXECUTADO POR CONTRATO
+    // ════════════════════════════════════════════════════════
+
+    async function carregarExec() {
+      document.getElementById("cont-executado").innerHTML = `<div class="estado-msg">Carregando…</div>`;
+      try {
+        const res  = await API.pedidos();
+        _pedidos   = res.dados || [];
+        _popularResponsaveis();
+        renderExec();
+      } catch (e) {
+        document.getElementById("cont-executado").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro: ${esc(e.message)}</div>`;
+      }
+    }
+
+    function _popularResponsaveis() {
+      const sel  = document.getElementById("filtro-resp");
+      const atual = sel.value;
+      const resps = [...new Set(_pedidos.map(p => p.responsavel).filter(Boolean))].sort();
+      sel.innerHTML = `<option value="">Todos</option>`;
+      resps.forEach(r => {
+        const opt = document.createElement("option");
+        opt.value = r; opt.textContent = r;
+        if (r === atual) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    }
+
+    function renderExec() {
+      const stFiltro   = document.getElementById("filtro-status").value.toLowerCase();
+      const respFiltro = document.getElementById("filtro-resp").value;
+
+      let lista = _pedidos.filter(p => {
+        if (stFiltro   && (p.status || "").toLowerCase() !== stFiltro) return false;
+        if (respFiltro && p.responsavel !== respFiltro) return false;
+        return true;
+      });
+
+      // totais
+      let totContratado = 0, totExecutado = 0, totMedido = 0, totFaturado = 0;
+      lista.forEach(p => {
+        const prov = num(p.valor) === 0 && num(p.executado) > 0;
+        totContratado += prov ? num(p.executado) : num(p.valor);
+        totExecutado  += num(p.executado);
+        totMedido     += num(p.medido);
+        totFaturado   += num(p.faturadoBruto);
+      });
+
+      const temProv = lista.some(p => num(p.valor) === 0 && num(p.executado) > 0);
+
+      document.getElementById("exec-info").textContent =
+        `${lista.length} pedido(s)  ·  Contratado: ${fmtBRL(totContratado)}  ·  Executado: ${fmtBRL(totExecutado)}`;
+
+      if (!lista.length) {
+        document.getElementById("cont-executado").innerHTML =
+          `<div class="rel-card"><div class="estado-msg">Nenhum pedido encontrado.</div></div>`;
+        return;
+      }
+
+      const _dotC = {"em negociação":"#f59e0b","aguardando pedido":"#9ca3af","pedido emitido":"var(--cor-acento)","concluído":"#16a34a"};
+
+      const linhas = lista.map(p => {
+        const base      = num(p.valor);
+        const exec      = num(p.executado);
+        const med       = num(p.medido);
+        const fat       = num(p.faturadoBruto);
+        const prov      = base === 0 && exec > 0;
+        const baseEfet  = prov ? exec : base;
+
+        const pctExec   = baseEfet > 0 ? Math.min(100, exec  / baseEfet * 100) : 0;
+        const pctMed    = baseEfet > 0 ? Math.min(100, med   / baseEfet * 100) : 0;
+        const saldoFat  = med - fat;
+        const dotCor    = _dotC[(p.status || "").toLowerCase()] || "#9ca3af";
+
+        const badgeProv = prov
+          ? `<span class="badge-prov">provisório</span>`
+          : "";
+
+        const barExec = `
+          <div class="mini-bar-wrap"><div class="mini-bar${prov ? " prov" : ""}" style="width:${pctExec.toFixed(1)}%"></div></div>
+          <span class="pct-txt${prov ? " prov" : ""}">${fmtPct(pctExec)}</span>`;
+
+        const barMed = `
+          <div class="mini-bar-wrap"><div class="mini-bar" style="width:${pctMed.toFixed(1)}%"></div></div>
+          <span class="pct-txt">${fmtPct(pctMed)}</span>`;
+
+        return `
+          <tr class="linha-clk" onclick="location.href='pedido.html?id=${p.id}'">
+            <td class="col-fix col-num">${esc(p.num_pedido_sap) || p.id}</td>
+            <td class="col-desc col-fix" style="left:60px;">${esc(p.descricao)}${badgeProv}</td>
+            <td class="c">
+              <span style="width:8px;height:8px;border-radius:50%;background:${dotCor};display:inline-block;"></span>
+              <span style="font-size:0.73rem;">${esc(p.status || "—")}</span>
+            </td>
+            <td class="r">${prov ? `<span style="color:#b45309;">${fmtBRL(baseEfet)}</span>` : fmtBRL(base)}</td>
+            <td class="r">${fmtBRL(exec)}</td>
+            <td class="r">${barExec}</td>
+            <td class="r">${fmtBRL(med)}</td>
+            <td class="r">${barMed}</td>
+            <td class="r">${fmtBRL(fat)}</td>
+            <td class="r ${saldoFat > 0.5 ? 'saldo-pos' : 'saldo-zero'}">${fmtBRL(saldoFat)}</td>
+          </tr>`;
+      }).join("");
+
+      const saldoFatTotal = totMedido - totFaturado;
+
+      document.getElementById("cont-executado").innerHTML = `
+        <div class="rel-card">
+          <div class="rel-scroll">
+            <table class="rel-tbl">
+              <thead>
+                <tr>
+                  <th class="l col-fix" style="min-width:60px;">Nº</th>
+                  <th class="l col-fix" style="left:60px;min-width:200px;">Contrato / Serviço</th>
+                  <th class="c" style="min-width:120px;">Status</th>
+                  <th class="r" style="min-width:130px;">Contratado</th>
+                  <th class="r" style="min-width:130px;">Executado</th>
+                  <th class="r" style="min-width:110px;">% Exec</th>
+                  <th class="r" style="min-width:130px;">Medido</th>
+                  <th class="r" style="min-width:110px;">% Med</th>
+                  <th class="r" style="min-width:130px;">Faturado</th>
+                  <th class="r" style="min-width:130px;">Saldo a Faturar</th>
+                </tr>
+              </thead>
+              <tbody>${linhas}</tbody>
+              <tfoot>
+                <tr>
+                  <td class="col-fix" colspan="3">TOTAL (${lista.length} pedidos)</td>
+                  <td class="r">${fmtBRL(totContratado)}</td>
+                  <td class="r">${fmtBRL(totExecutado)}</td>
+                  <td class="r"></td>
+                  <td class="r">${fmtBRL(totMedido)}</td>
+                  <td class="r"></td>
+                  <td class="r">${fmtBRL(totFaturado)}</td>
+                  <td class="r" style="color:#0F6E56;">${fmtBRL(saldoFatTotal)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+        ${temProv ? `<div class="rel-footer"><span style="color:#b45309;">⚠ Contratos marcados como <strong>provisório</strong> ainda não têm valor contratual definido — o valor executado é usado como base.</span></div>` : ""}`;
+    }
+
+    // ════════════════════════════════════════════════════════
+    // ABA 2 — MAPA MENSAL DE BMs
+    // ════════════════════════════════════════════════════════
+
+    async function carregarMapa() {
+      _mapaCarregou = true;
+      document.getElementById("cont-mapa").innerHTML = `<div class="estado-msg">Carregando…</div>`;
+      try {
+        const res = await API.mapaMensal(selAno.value);
+        renderMapa(res);
+      } catch (e) {
+        document.getElementById("cont-mapa").innerHTML =
+          `<div class="estado-msg" style="color:#dc2626;">Erro: ${esc(e.message)}</div>`;
+      }
+    }
+
+    function renderMapa({ ano, linhas, totais }) {
+      const meses = [];
+      for (let m = 1; m <= 12; m++) meses.push(String(m).padStart(2, "0") + "/" + ano);
+
+      const linhasFiltradas = linhas.filter(r => {
+        if (Object.keys(r.meses).length > 0) return true;
+        return r.status === "pedido emitido" || r.status === "concluído";
+      });
+
+      document.getElementById("mapa-info").textContent =
+        `${linhasFiltradas.length} pedido(s) — ${fmtBRL(totais.valor)} contratado`;
+
+      if (!linhasFiltradas.length) {
+        document.getElementById("cont-mapa").innerHTML =
+          `<div class="mapa-card"><div class="estado-msg">Nenhum pedido com medição em ${ano}.</div></div>`;
+        return;
+      }
+
+      const cabecalhoMeses = meses.map(m => `<th class="r">${m}</th>`).join("");
+
+      const linhasHtml = linhasFiltradas.map(r => {
+        const celulas = meses.map(m => {
+          const med = r.meses[m];
+          if (!med || !med.valor) return `<td class="r"></td>`;
+          const cls = _classeCelula(med.status);
+          return `<td class="r ${cls}" onclick="event.stopPropagation();location.href='medicao.html?id=${med.id}';" title="${esc(med.num_bm || "")} — ${esc(med.status || "")}">${fmtBRL(med.valor)}</td>`;
+        }).join("");
+
+        const saldoCls = r.saldo > 0.5 ? "saldo-pos" : "saldo-zero";
+        return `
+          <tr class="linha-clk" onclick="location.href='pedido.html?id=${r.id}'">
+            <td class="col-fix col-num">#${esc(r.num_pedido_sap) || r.id}</td>
+            <td class="col-desc">${esc(r.descricao)}</td>
+            <td class="r">${fmtBRL(r.valor)}</td>
+            <td class="r">${fmtBRL(r.acumulado)}</td>
+            <td class="r col-fim ${saldoCls}">${fmtBRL(r.saldo)}</td>
+            ${celulas}
+          </tr>`;
+      }).join("");
+
+      const totaisCelulas = meses.map(m => {
+        const v = totais.porMes[m] || 0;
+        return `<td class="r">${v > 0 ? fmtBRL(v) : ""}</td>`;
+      }).join("");
+
+      document.getElementById("cont-mapa").innerHTML = `
+        <div class="mapa-card">
+          <div class="mapa-scroll">
+            <table class="mapa-tbl">
+              <thead>
+                <tr>
+                  <th class="l col-fix">Nº Pedido</th>
+                  <th class="l">Contrato / Serviço</th>
+                  <th class="r">Valor pedido</th>
+                  <th class="r">Acumulado</th>
+                  <th class="r col-fim">Saldo</th>
+                  ${cabecalhoMeses}
+                </tr>
+              </thead>
+              <tbody>${linhasHtml}</tbody>
+              <tfoot>
+                <tr>
+                  <td class="col-fix" colspan="2">TOTAL</td>
+                  <td class="r">${fmtBRL(totais.valor)}</td>
+                  <td class="r">${fmtBRL(totais.acumulado)}</td>
+                  <td class="r col-fim saldo">${fmtBRL(totais.saldo)}</td>
+                  ${totaisCelulas}
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>`;
+    }
+
+    function _classeCelula(status) {
+      const s = (status || "").toLowerCase();
+      if (s.includes("faturada"))   return "cel-faturada";
+      if (s.includes("aprovação") || s.includes("aprovacao")) return "cel-aprovacao";
+      if (s.includes("elaboração") || s.includes("elaboracao")) return "cel-elaboracao";
+      return "";
+    }
+  </script>
+  <script>if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');</script>
+</body>
+</html>
