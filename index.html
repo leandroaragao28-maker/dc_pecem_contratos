@@ -75,6 +75,14 @@
       font-size: 0.7rem; color: var(--cor-texto-m);
       margin-top: 2px;
     }
+    .metrica-nota {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.68rem; color: #b45309;
+      background: #fef3c7; border: 1px solid #fde68a;
+      border-radius: 4px; padding: 2px 6px;
+      margin-top: 5px; cursor: default;
+    }
+    .metrica-nota svg { flex-shrink: 0; }
     .metrica-pct {
       display: inline-block;
       background: var(--cor-acento); color: white;
@@ -262,9 +270,16 @@
       const pctMedido      = cartoes.contratado > 0 ? (cartoes.medido / cartoes.contratado * 100) : 0;
       const pctFat         = cartoes.medido     > 0 ? (cartoes.faturadoLiquido / cartoes.medido * 100) : 0;
 
+      const iWarn = `<svg width="12" height="12" viewBox="0 0 16 16" fill="none"><path d="M8 2L14.5 13.5H1.5L8 2Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><line x1="8" y1="7" x2="8" y2="10" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/><circle cx="8" cy="12" r="0.6" fill="currentColor"/></svg>`;
+      const notaProvisorio = cartoes.executadoProvisorio > 0
+        ? { icone: iWarn,
+            texto: `inc. ${fmtBRL(cartoes.executadoProvisorio)} provisório`,
+            titulo: `${fmtBRL(cartoes.executadoProvisorio)} referente a contratos sem valor definido (orçamento pendente)` }
+        : null;
+
       const htmlMetricas = `
         <div class="metricas-grid">
-          ${metrica(iDoc,   "azul",    "Executado",        cartoes.executado,        cartoes.contratado)}
+          ${metrica(iDoc,   "azul",    "Executado",        cartoes.executado,        cartoes.contratado, notaProvisorio)}
           ${metrica(iBars,  "verde",   "Medido",           cartoes.medido,           cartoes.contratado)}
           ${metrica(iTrend, "roxo",    "Faturado líquido", cartoes.faturadoLiquido,  cartoes.medido)}
           ${metrica(iPie,   "laranja", "Saldo a medir",    cartoes.saldoMedir)}
@@ -380,9 +395,12 @@
         htmlFooter;
     }
 
-    function metrica(icon, cor, titulo, valor, base) {
+    function metrica(icon, cor, titulo, valor, base, nota) {
       const pct = base > 0
         ? `<div class="metrica-sub">de ${fmtBRL(base)} <span class="metrica-pct">${((valor / base) * 100).toFixed(1)}%</span></div>`
+        : "";
+      const notaHtml = nota
+        ? `<div class="metrica-nota" title="${nota.titulo}">${nota.icone} ${nota.texto}</div>`
         : "";
       return `
         <div class="metrica">
@@ -391,6 +409,7 @@
             <div class="metrica-titulo">${titulo}</div>
             <div class="metrica-valor">${fmtBRL(valor)}</div>
             ${pct}
+            ${notaHtml}
           </div>
         </div>`;
     }
