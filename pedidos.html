@@ -258,8 +258,10 @@
       }
 
       el.innerHTML = lista.map(p => {
-        const base    = num(p.valor);
-        const pctExec = base > 0 ? (num(p.executado)     / base * 100) : 0;
+        const base       = num(p.valor);
+        const provisorio = base === 0 && num(p.executado) > 0;
+        const pctExec = provisorio ? 100
+                      : base > 0  ? (num(p.executado)     / base * 100) : 0;
         const pctMed  = base > 0 ? (num(p.medido)        / base * 100) : 0;
         const pctFat  = base > 0 ? (num(p.faturadoBruto) / base * 100) : 0;
         const dotCor  = _dotC[p.status] || "#9ca3af";
@@ -277,7 +279,7 @@
               </div>
             </div>
             <div class="ped-bars">
-              ${pedBarRow("Executado", pctExec)}
+              ${pedBarRow("Executado", pctExec, provisorio ? "#f59e0b" : null)}
               ${pedBarRow("Medido",    pctMed)}
               ${pedBarRow("Faturado",  pctFat)}
             </div>
@@ -309,13 +311,15 @@
       `;
     }
 
-    function pedBarRow(label, pct) {
-      const w = Math.max(0, Math.min(100, pct));
+    function pedBarRow(label, pct, cor) {
+      const w        = Math.max(0, Math.min(100, pct));
+      const barStyle = cor ? `width:${w}%;background:${cor};` : `width:${w}%;`;
+      const pctStyle = cor ? `color:${cor};font-weight:600;` : "";
       return `
         <div class="ped-brow">
           <span class="ped-blbl">${label}</span>
-          <div class="ped-bw"><div class="ped-b" style="width:${w}%"></div></div>
-          <span class="ped-bpct">${pct.toFixed(1)}%</span>
+          <div class="ped-bw"><div class="ped-b" style="${barStyle}"></div></div>
+          <span class="ped-bpct" style="${pctStyle}">${pct.toFixed(1)}%</span>
         </div>`;
     }
 
