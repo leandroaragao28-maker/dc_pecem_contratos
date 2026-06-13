@@ -303,6 +303,7 @@
       }
 
       const _dotC = {"em negociação":"#f59e0b","aguardando pedido":"#9ca3af","pedido emitido":"var(--cor-acento)","concluído":"#16a34a"};
+      const _stAbr = {"em negociação":"EN","aguardando pedido":"AP","pedido emitido":"PE","concluído":"C"};
 
       const linhas = lista.map(p => {
         const base      = num(p.valor);
@@ -312,36 +313,37 @@
         const prov      = base === 0 && exec > 0;
         const baseEfet  = prov ? exec : base;
 
-        const pctExec   = baseEfet > 0 ? Math.min(100, exec  / baseEfet * 100) : 0;
-        const pctMed    = baseEfet > 0 ? Math.min(100, med   / baseEfet * 100) : 0;
+        const pctExec   = baseEfet > 0 ? Math.min(100, exec / baseEfet * 100) : 0;
+        const pctMed    = baseEfet > 0 ? Math.min(100, med  / baseEfet * 100) : 0;
         const saldoFat  = med - fat;
-        const dotCor    = _dotC[(p.status || "").toLowerCase()] || "#9ca3af";
+        const stKey     = (p.status || "").toLowerCase();
+        const dotCor    = _dotC[stKey] || "#9ca3af";
+        const stAbr     = _stAbr[stKey] || (p.status || "—");
 
-        const badgeProv = prov
-          ? `<span class="badge-prov">provisório</span>`
-          : "";
+        const badgeProv = prov ? `<span class="badge-prov">provisório</span>` : "";
 
-        const barExec = `
-          <div class="mini-bar-wrap"><div class="mini-bar${prov ? " prov" : ""}" style="width:${pctExec.toFixed(1)}%"></div></div>
-          <span class="pct-txt${prov ? " prov" : ""}">${fmtPct(pctExec)}</span>`;
+        const numPed    = p.num_pedido_sap ? esc(p.num_pedido_sap) + " — " : "";
 
-        const barMed = `
-          <div class="mini-bar-wrap"><div class="mini-bar" style="width:${pctMed.toFixed(1)}%"></div></div>
-          <span class="pct-txt">${fmtPct(pctMed)}</span>`;
+        const mkBar = (pct, extra) => `
+          <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end;">
+            <div class="mini-bar-wrap" style="width:72px;flex-shrink:0;">
+              <div class="mini-bar${extra || ""}" style="width:${pct.toFixed(1)}%"></div>
+            </div>
+            <span class="pct-txt${extra || ""}" style="width:38px;text-align:right;flex-shrink:0;">${fmtPct(pct)}</span>
+          </div>`;
 
         return `
           <tr class="linha-clk" onclick="location.href='pedido.html?id=${p.id}'">
-            <td class="col-fix col-num">${esc(p.num_pedido_sap) || p.id}</td>
-            <td class="col-desc col-fix" style="left:60px;">${esc(p.descricao)}${badgeProv}</td>
-            <td class="c">
-              <span style="width:8px;height:8px;border-radius:50%;background:${dotCor};display:inline-block;"></span>
-              <span style="font-size:0.73rem;">${esc(p.status || "—")}</span>
+            <td class="col-fix col-num">${p.id}</td>
+            <td class="col-desc col-fix" style="left:52px;">${numPed}${esc(p.descricao)}${badgeProv}</td>
+            <td class="c" title="${esc(p.status || "")}">
+              <span style="width:8px;height:8px;border-radius:50%;background:${dotCor};display:inline-block;margin-right:4px;"></span>${stAbr}
             </td>
             <td class="r">${prov ? `<span style="color:#b45309;">${fmtBRL(baseEfet)}</span>` : fmtBRL(base)}</td>
             <td class="r">${fmtBRL(exec)}</td>
-            <td class="r">${barExec}</td>
+            <td class="r">${mkBar(pctExec, prov ? " prov" : "")}</td>
             <td class="r">${fmtBRL(med)}</td>
-            <td class="r">${barMed}</td>
+            <td class="r">${mkBar(pctMed, "")}</td>
             <td class="r">${fmtBRL(fat)}</td>
             <td class="r ${saldoFat > 0.5 ? 'saldo-pos' : 'saldo-zero'}">${fmtBRL(saldoFat)}</td>
           </tr>`;
@@ -349,20 +351,30 @@
 
       const saldoFatTotal = totMedido - totFaturado;
 
+      const legendaStatus = `
+        <div style="display:flex;gap:14px;margin-top:10px;font-size:0.74rem;align-items:center;flex-wrap:wrap;color:var(--cor-texto-m);">
+          <span>Status:</span>
+          ${Object.entries(_stAbr).map(([k, v]) => `
+            <span style="display:inline-flex;align-items:center;gap:5px;">
+              <span style="width:8px;height:8px;border-radius:50%;background:${_dotC[k]};display:inline-block;flex-shrink:0;"></span>
+              <strong>${v}</strong> = ${k.charAt(0).toUpperCase() + k.slice(1)}
+            </span>`).join("")}
+        </div>`;
+
       document.getElementById("cont-executado").innerHTML = `
         <div class="rel-card">
           <div class="rel-scroll">
             <table class="rel-tbl">
               <thead>
                 <tr>
-                  <th class="l col-fix" style="min-width:60px;">Nº</th>
-                  <th class="l col-fix" style="left:60px;min-width:200px;">Contrato / Serviço</th>
-                  <th class="c" style="min-width:120px;">Status</th>
+                  <th class="l col-fix" style="min-width:52px;">Nº</th>
+                  <th class="l col-fix" style="left:52px;min-width:220px;">Contrato / Serviço</th>
+                  <th class="c" style="min-width:56px;">ST</th>
                   <th class="r" style="min-width:130px;">Contratado</th>
                   <th class="r" style="min-width:130px;">Executado</th>
-                  <th class="r" style="min-width:110px;">% Exec</th>
+                  <th class="r" style="min-width:124px;">% Exec</th>
                   <th class="r" style="min-width:130px;">Medido</th>
-                  <th class="r" style="min-width:110px;">% Med</th>
+                  <th class="r" style="min-width:124px;">% Med</th>
                   <th class="r" style="min-width:130px;">Faturado</th>
                   <th class="r" style="min-width:130px;">Saldo a Faturar</th>
                 </tr>
@@ -383,7 +395,8 @@
             </table>
           </div>
         </div>
-        ${temProv ? `<div class="rel-footer"><span style="color:#b45309;">⚠ Contratos marcados como <strong>provisório</strong> ainda não têm valor contratual definido — o valor executado é usado como base.</span></div>` : ""}`;
+        ${legendaStatus}
+        ${temProv ? `<div class="rel-footer" style="margin-top:6px;"><span style="color:#b45309;">⚠ Contratos marcados como <strong>provisório</strong> ainda não têm valor contratual definido — o valor executado é usado como base.</span></div>` : ""}`;
     }
 
     // ════════════════════════════════════════════════════════
