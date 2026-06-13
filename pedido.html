@@ -573,8 +573,11 @@
       const tetoFatDireto      = num(p.valor_teto_fat_direto);
       const saldoFatDireto     = tetoFatDireto - fatDiretoConsumido;
       const pctGauge           = tetoFatDireto > 0 ? (fatDiretoConsumido / tetoFatDireto * 100) : 0;
-      const saldoContratual    = num(p.valor) - totalExecutado;
-      const avancoPct          = num(p.valor) > 0 ? (totalExecutado / num(p.valor) * 100) : 0;
+      // quando valor = 0 (orçamento pendente), usa executado como base provisória
+      const valorBase          = num(p.valor) > 0 ? num(p.valor) : totalExecutado;
+      const valorProvisorio    = num(p.valor) === 0 && totalExecutado > 0;
+      const saldoContratual    = valorBase - totalExecutado;
+      const avancoPct          = valorBase > 0 ? (totalExecutado / valorBase * 100) : 0;
       const agora              = new Date();
       const tsAtualiz          = agora.toLocaleDateString("pt-BR") + " às " + agora.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
       const dotCores           = {"em negociação":"#f59e0b","aguardando pedido":"#9ca3af","pedido emitido":"var(--cor-acento)","concluído":"#16a34a"};
@@ -630,18 +633,18 @@
           <!-- Card 1: Evolução do contrato -->
           <div class="fin-card">
             <div class="fin-card-hdr">${iChart} Evolução do contrato</div>
-            ${evoRow("Executado", totalExecutado,     num(p.valor))}
-            ${evoRow("Medido",    totalMedido,        num(p.valor))}
-            ${evoRow("Faturado",  totalFaturado,      num(p.valor))}
-            ${evoRow("Retido",    totalRetidoLiquido, num(p.valor))}
+            ${evoRow("Executado", totalExecutado,     valorBase)}
+            ${evoRow("Medido",    totalMedido,        valorBase)}
+            ${evoRow("Faturado",  totalFaturado,      valorBase)}
+            ${evoRow("Retido",    totalRetidoLiquido, valorBase)}
           </div>
 
           <!-- Card 2: Resumo financeiro -->
           <div class="fin-card">
             <div class="fin-card-hdr">${iPie} Resumo financeiro</div>
             <div class="res-row">
-              <span class="res-label">Valor contratado</span>
-              <span class="res-big">${fmtBRL(p.valor)}</span>
+              <span class="res-label">Valor contratado${valorProvisorio ? ' <span style="font-size:0.72rem;font-weight:400;color:var(--warn,#b45309);">(provisório)</span>' : ''}</span>
+              <span class="res-big" style="${valorProvisorio ? 'color:var(--warn,#b45309);' : ''}">${fmtBRL(valorBase)}</span>
             </div>
             <div class="res-row">
               <span class="res-label">Executado acumulado</span>
