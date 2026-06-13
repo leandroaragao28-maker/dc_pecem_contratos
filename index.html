@@ -260,7 +260,7 @@
 
       const htmlMetricas = `
         <div class="metricas-grid">
-          ${metrica(iDoc,   "azul",    "Contratado",       cartoes.contratado)}
+          ${metrica(iDoc,   "azul",    "Executado",        cartoes.executado,        cartoes.contratado)}
           ${metrica(iBars,  "verde",   "Medido",           cartoes.medido,           cartoes.contratado)}
           ${metrica(iTrend, "roxo",    "Faturado líquido", cartoes.faturadoLiquido,  cartoes.medido)}
           ${metrica(iPie,   "laranja", "Saldo a medir",    cartoes.saldoMedir)}
@@ -279,6 +279,8 @@
           </div>
         </div>`;
 
+      const totalQtd   = porStatus.reduce((s, x) => s + x.qtd, 0);
+      const totalValor = porStatus.reduce((s, x) => s + x.valor, 0);
       const htmlStatus = `
         <div class="card" style="padding:14px 16px;">
           <div class="secao-titulo">${iChart} Pedidos por status</div>
@@ -292,6 +294,10 @@
                 <div style="width:${s.valor > 0 ? ((s.valor / maxValorStatus) * 100).toFixed(1) : 0}%;background:${COR_STATUS[s.status] || "#888"};"></div>
               </div>
             </div>`).join("")}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;padding-top:10px;border-top:1px solid var(--cor-borda);font-size:0.8rem;">
+            <strong style="color:var(--cor-primaria);text-transform:uppercase;letter-spacing:0.4px;font-size:0.72rem;">Total</strong>
+            <span style="color:var(--cor-texto);"><strong>${totalQtd}</strong> pedido${totalQtd !== 1 ? "s" : ""} · <strong style="color:var(--cor-primaria);">${fmtBRL(totalValor)}</strong></span>
+          </div>
         </div>`;
 
       const htmlAlertas = `
