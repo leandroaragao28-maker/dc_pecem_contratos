@@ -266,7 +266,7 @@
     }
 
     function renderDashboard({ cartoes, porStatus, ranking, alertas }) {
-      const maxValorStatus = Math.max(...porStatus.map(s => s.valor), 1);
+      const maxValorStatus = porStatus.reduce((s, x) => s + x.valor, 0) || 1;
       const pctMedido      = cartoes.contratado > 0 ? (cartoes.medido / cartoes.contratado * 100) : 0;
       const pctFat         = cartoes.medido     > 0 ? (cartoes.faturadoLiquido / cartoes.medido * 100) : 0;
 
