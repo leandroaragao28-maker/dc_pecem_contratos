@@ -25,35 +25,36 @@
 
     /* ── Título da página ───────────────────── */
     .page-titulo {
-      font-size: 1.5rem; font-weight: 700; color: var(--cor-primaria);
-      margin-bottom: 4px;
+      font-size: 1.2rem; font-weight: 700; color: var(--cor-primaria);
+      margin-bottom: 3px;
     }
     .page-titulo + hr {
-      border: none; border-top: 3px solid var(--cor-acento);
-      width: 40px; margin: 0 0 22px;
+      border: none; border-top: 2px solid var(--cor-acento);
+      width: 32px; margin: 0 0 14px;
     }
 
     /* ── Cards de métrica com ícone ─────────── */
     .metricas-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 14px;
-      margin-bottom: 20px;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 10px;
+      margin-bottom: 14px;
     }
     .metrica {
       background: white;
-      border-radius: var(--raio-lg);
+      border-radius: var(--raio);
       border: 1px solid var(--cor-borda);
       box-shadow: var(--sombra);
-      padding: 16px 18px;
-      display: flex; align-items: center; gap: 14px;
+      padding: 11px 14px;
+      display: flex; align-items: center; gap: 11px;
     }
     .metrica-icon {
-      width: 48px; height: 48px;
-      border-radius: 10px;
+      width: 38px; height: 38px;
+      border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
       flex-shrink: 0;
     }
+    .metrica-icon svg { width: 19px; height: 19px; }
     .metrica-icon.azul    { background: #DBEAFE; color: #1D4ED8; }
     .metrica-icon.verde   { background: #DCFCE7; color: #15803D; }
     .metrica-icon.roxo    { background: #EDE9FE; color: #6D28D9; }
@@ -62,40 +63,40 @@
     .metrica-titulo {
       font-size: 0.7rem; font-weight: 600;
       color: var(--cor-texto-m);
-      text-transform: uppercase; letter-spacing: 0.5px;
-      margin-bottom: 4px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      margin-bottom: 2px;
     }
     .metrica-valor {
-      font-size: 1.4rem; font-weight: 700;
+      font-size: 1.05rem; font-weight: 700;
       color: var(--cor-texto);
-      line-height: 1.1;
+      line-height: 1.15;
     }
     .metrica-sub {
-      font-size: 0.72rem; color: var(--cor-texto-m);
-      margin-top: 4px;
+      font-size: 0.7rem; color: var(--cor-texto-m);
+      margin-top: 2px;
     }
     .metrica-pct {
       display: inline-block;
       background: var(--cor-acento); color: white;
-      border-radius: 4px;
-      padding: 1px 6px;
-      font-weight: 600; font-size: 0.7rem;
-      margin-left: 4px;
+      border-radius: 3px;
+      padding: 0 5px;
+      font-weight: 600; font-size: 0.68rem;
+      margin-left: 3px;
     }
 
     /* ── Grid 3 colunas: resumo + status + alertas ─ */
     .grid-3 {
       display: grid;
-      grid-template-columns: 1fr 1.4fr 1.2fr;
-      gap: 16px; margin-bottom: 20px;
+      grid-template-columns: 0.85fr 1.4fr 1.25fr;
+      gap: 12px; margin-bottom: 14px;
     }
     @media (max-width: 980px) { .grid-3 { grid-template-columns: 1fr; } }
 
     .secao-titulo {
-      font-size: 0.78rem; font-weight: 600;
+      font-size: 0.72rem; font-weight: 600;
       color: var(--cor-texto-m);
-      text-transform: uppercase; letter-spacing: 0.5px;
-      margin-bottom: 14px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+      margin-bottom: 11px;
       display: flex; align-items: center; gap: 6px;
     }
     .secao-titulo svg { color: var(--cor-acento); }
@@ -104,31 +105,32 @@
     .donut-wrap { display: flex; flex-direction: column; align-items: center; }
     .donut-info {
       text-align: center;
-      font-size: 0.76rem; color: var(--cor-texto-m);
-      margin-top: 14px;
+      font-size: 0.72rem; color: var(--cor-texto-m);
+      margin-top: 10px;
+      line-height: 1.4;
     }
-    .donut-info strong { display: block; color: var(--cor-texto); font-weight: 600; }
+    .donut-info strong { display: block; color: var(--cor-texto); font-weight: 700; font-size: 0.88rem; margin: 2px 0; }
 
     /* ── Pedidos por status ─────────────────── */
-    .status-linha { margin-bottom: 14px; }
+    .status-linha { margin-bottom: 10px; }
     .status-linha:last-child { margin-bottom: 0; }
-    .status-linha .label { display: flex; justify-content: space-between; font-size: 0.82rem; margin-bottom: 4px; }
+    .status-linha .label { display: flex; justify-content: space-between; font-size: 0.78rem; margin-bottom: 3px; }
     .status-linha .label strong { font-weight: 500; display:flex; align-items:center; gap:6px; }
-    .status-linha .label strong::before { content: ""; width: 8px; height: 8px; border-radius: 50%; }
+    .status-linha .label strong::before { content: ""; width: 7px; height: 7px; border-radius: 50%; }
     .status-linha[data-st="em negociação"]    .label strong::before { background: #888780; }
     .status-linha[data-st="aguardando pedido"] .label strong::before { background: #EF9F27; }
     .status-linha[data-st="pedido emitido"]   .label strong::before { background: #378ADD; }
     .status-linha[data-st="concluído"]         .label strong::before { background: #1D9E75; }
-    .status-linha .label span  { color: var(--cor-texto-m); font-size: 0.76rem; }
-    .barra-status { height: 7px; background: var(--cor-borda); border-radius: 4px; overflow: hidden; }
-    .barra-status div { height: 7px; border-radius: 4px; transition: width 0.4s ease; }
+    .status-linha .label span  { color: var(--cor-texto-m); font-size: 0.72rem; }
+    .barra-status { height: 6px; background: var(--cor-borda); border-radius: 3px; overflow: hidden; }
+    .barra-status div { height: 6px; border-radius: 3px; transition: width 0.4s ease; }
 
     /* ── Alertas ───────────────────────────── */
-    .alertas-lista { display: flex; flex-direction: column; gap: 6px; max-height: 380px; overflow-y: auto; }
+    .alertas-lista { display: flex; flex-direction: column; gap: 5px; max-height: 320px; overflow-y: auto; padding-right: 4px; }
     .alerta-item {
-      display: flex; align-items: center; gap: 10px;
-      padding: 8px 12px; border-radius: 6px;
-      font-size: 0.82rem;
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 10px; border-radius: 5px;
+      font-size: 0.76rem;
     }
     .alerta-am { background: #FEF7E0; color: #92600A; }
     .alerta-vm { background: #FEE2E2; color: #991B1B; }
@@ -265,7 +267,7 @@
         </div>`;
 
       const htmlResumo = `
-        <div class="card" style="padding:18px 22px;">
+        <div class="card" style="padding:14px 16px;">
           <div class="secao-titulo">Resumo geral</div>
           <div class="donut-wrap">
             ${donutGauge(pctMedido)}
@@ -278,7 +280,7 @@
         </div>`;
 
       const htmlStatus = `
-        <div class="card" style="padding:18px 22px;">
+        <div class="card" style="padding:14px 16px;">
           <div class="secao-titulo">${iChart} Pedidos por status</div>
           ${porStatus.map(s => `
             <div class="status-linha" data-st="${s.status}">
@@ -293,7 +295,7 @@
         </div>`;
 
       const htmlAlertas = `
-        <div class="card" style="padding:18px 22px;">
+        <div class="card" style="padding:14px 16px;">
           <div class="secao-titulo">${iAlerta} Alertas ${alertas.length ? `<span style="margin-left:auto;background:var(--cor-acento);color:white;border-radius:10px;padding:1px 8px;font-size:0.7rem;">${alertas.length}</span>` : ""}</div>
           ${!alertas.length
             ? `<div class="txt-muted" style="font-size:0.88rem;padding:8px 0;">Nenhum alerta no momento.</div>`
@@ -309,38 +311,49 @@
               }).join("")}</div>`}
         </div>`;
 
+      const maxSaldo = Math.max(...ranking.map(r => r.saldoFaturar), 1);
       const htmlRanking = `
         <div class="card" style="padding:0;overflow:hidden;">
-          <div style="padding:16px 22px 12px;border-bottom:1px solid var(--cor-borda);">
+          <div style="padding:11px 16px;border-bottom:1px solid var(--cor-borda);">
             <div class="secao-titulo" style="margin:0;">${iTrophy} Ranking — saldo a faturar</div>
           </div>
           ${!ranking.length
             ? `<div class="estado-msg">Nenhum pedido com saldo a faturar.</div>`
             : `<div class="tabela-wrap">
-                <table>
+                <table class="rank-tbl">
                   <thead>
                     <tr>
-                      <th style="width:55px;">ID</th>
+                      <th style="width:48px;">Pos</th>
+                      <th style="width:60px;">ID</th>
                       <th>Descrição</th>
-                      <th class="num" style="width:130px;">Medido</th>
-                      <th class="num" style="width:130px;">Faturado</th>
-                      <th class="num" style="width:140px;">Saldo a faturar</th>
+                      <th class="num" style="width:110px;">Medido</th>
+                      <th class="num" style="width:110px;">Faturado</th>
+                      <th class="num" style="width:130px;">Saldo a faturar</th>
+                      <th style="width:90px;">% do líder</th>
                     </tr>
                   </thead>
                   <tbody>
-                    ${ranking.map((r, i) => `
+                    ${ranking.map((r, i) => {
+                      const pctLider = (r.saldoFaturar / maxSaldo * 100);
+                      const medalha = i === 0 ? "🥇" : i === 1 ? "🥈" : i === 2 ? "🥉" : `${i + 1}º`;
+                      return `
                       <tr class="ranking-row" onclick="location.href='pedido.html?id=${r.id}'">
+                        <td style="font-weight:600;color:var(--cor-texto-m);font-size:0.78rem;">${medalha}</td>
                         <td><strong>#${r.id}</strong></td>
-                        <td>
-                          <div style="display:flex;align-items:center;gap:10px;">
-                            <span style="min-width:20px;font-size:0.78rem;color:var(--cor-texto-m);font-weight:600;">${i + 1}º</span>
-                            ${esc(r.descricao)}
-                          </div>
-                        </td>
+                        <td>${esc(r.descricao)}</td>
                         <td class="num txt-muted">${fmtBRL(r.medido)}</td>
                         <td class="num txt-muted">${fmtBRL(r.faturadoBruto)}</td>
                         <td class="num" style="font-weight:600;color:var(--cor-primaria);">${fmtBRL(r.saldoFaturar)}</td>
-                      </tr>`).join("")}
+                        <td>
+                          <div style="display:flex;align-items:center;gap:6px;">
+                            <div style="flex:1;height:5px;background:var(--cor-borda);border-radius:3px;overflow:hidden;">
+                              <div style="height:5px;background:var(--cor-acento);width:${pctLider.toFixed(1)}%;border-radius:3px;"></div>
+                            </div>
+                            <span style="font-size:0.7rem;color:var(--cor-texto-m);min-width:30px;text-align:right;">${pctLider.toFixed(0)}%</span>
+                          </div>
+                        </td>
+                      </tr>`;
+                    }).join("")}
                   </tbody>
                 </table>
               </div>`}
@@ -372,7 +385,7 @@
         </div>`;
     }
 
-    function donutGauge(pct, size=130) {
+    function donutGauge(pct, size=110) {
       const clamped = Math.max(0, Math.min(100, pct));
       const r = 42, cx = 60, cy = 60;
       const circ  = 2 * Math.PI * r;
@@ -380,13 +393,13 @@
       const cor = "var(--cor-acento)";
       return `
         <svg width="${size}" height="${size}" viewBox="0 0 120 120">
-          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E8EDF2" stroke-width="11"/>
-          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${cor}" stroke-width="11"
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#E8EDF2" stroke-width="10"/>
+          <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${cor}" stroke-width="10"
             stroke-dasharray="${filled.toFixed(1)} ${circ.toFixed(1)}"
             stroke-linecap="round"
             transform="rotate(-90 ${cx} ${cy})"/>
-          <text x="${cx}" y="${cy + 6}" text-anchor="middle"
-            font-size="22" font-weight="700" fill="${cor}">${clamped.toFixed(1).replace(".", ",")}%</text>
+          <text x="${cx}" y="${cy + 5}" text-anchor="middle"
+            font-size="20" font-weight="700" fill="${cor}">${clamped.toFixed(1).replace(".", ",")}%</text>
         </svg>`;
     }
 
