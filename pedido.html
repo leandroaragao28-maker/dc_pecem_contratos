@@ -245,10 +245,6 @@
             <label>Preço unitário (R$)</label>
             <input type="number" id="fi-preco" min="0" step="any" required>
           </div>
-          <div class="form-grupo">
-            <label>% Executado</label>
-            <input type="number" id="fi-exec" min="0" max="100" step="0.1" value="0">
-          </div>
         </div>
         <div class="modal-acoes">
           <button type="button" class="btn btn-secundario" onclick="fecharModalItem()">Cancelar</button>
@@ -932,7 +928,6 @@
       document.getElementById("modal-item-titulo").textContent = "Novo item";
       document.getElementById("form-item").reset();
       document.getElementById("fi-id").value = "";
-      document.getElementById("fi-exec").value = "0";
       // próximo número sequencial
       const maxNum = itensAtuais.reduce((max, i) => {
         const n = parseInt(i.num_item, 10);
@@ -952,7 +947,6 @@
       document.getElementById("fi-unidade").value  = item.unidade || "";
       document.getElementById("fi-qtd").value      = item.qtd_contratada || "";
       document.getElementById("fi-preco").value    = item.preco_unitario || "";
-      document.getElementById("fi-exec").value     = item.perc_executado || 0;
       document.getElementById("modal-item").classList.add("aberto");
     }
 
@@ -965,15 +959,17 @@
       const btn = document.getElementById("btn-salvar-item");
       btn.disabled = true; btn.textContent = "Salvando…";
       try {
+        const itemId = document.getElementById("fi-id").value || null;
+        const itemExistente = itemId ? itensAtuais.find(i => String(i.id) === String(itemId)) : null;
         const dados = {
-          id:            document.getElementById("fi-id").value || null,
-          pedido_id:     pedidoId,
-          num_item:      document.getElementById("fi-num").value,
-          descricao:     document.getElementById("fi-descricao").value,
-          unidade:       document.getElementById("fi-unidade").value,
-          qtd_contratada:parseFloat(document.getElementById("fi-qtd").value) || 0,
-          preco_unitario:parseFloat(document.getElementById("fi-preco").value) || 0,
-          perc_executado:parseFloat(document.getElementById("fi-exec").value) || 0,
+          id:             itemId,
+          pedido_id:      pedidoId,
+          num_item:       document.getElementById("fi-num").value,
+          descricao:      document.getElementById("fi-descricao").value,
+          unidade:        document.getElementById("fi-unidade").value,
+          qtd_contratada: parseFloat(document.getElementById("fi-qtd").value) || 0,
+          preco_unitario: parseFloat(document.getElementById("fi-preco").value) || 0,
+          perc_executado: itemExistente ? (parseFloat(itemExistente.perc_executado) || 0) : 0,
         };
         await API.salvarItem(dados);
         fecharModalItem();
